@@ -48,7 +48,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 4. Core Domain Types
 
-- [ ] Define shared config types.
+- [x] Define shared config types.
 - [ ] Define shared metadata document types.
 - [ ] Define Apple metadata mapping types.
 - [ ] Define Google metadata mapping types.
