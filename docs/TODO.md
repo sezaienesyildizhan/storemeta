@@ -53,7 +53,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Define Apple metadata mapping types.
 - [x] Define Google metadata mapping types.
 - [x] Define screenshot descriptor types.
-- [ ] Define locale mapping and grouping types.
+- [x] Define locale mapping and grouping types.
 - [ ] Define command result and summary types.
 - [ ] Define reusable error types.
 
