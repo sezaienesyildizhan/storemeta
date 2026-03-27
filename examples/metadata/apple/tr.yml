@@ -1,0 +1,11 @@
+locale: tr
+app_name: Storemeta Ornek
+subtitle: Magaza metinlerini guvenli yonetin
+privacy_policy_url: https://example.com/privacy
+description: |
+  Storemeta Ornek, App Store metinlerinin YAML dosyalarinda nasil tutuldugunu gosterir.
+keywords: metadata, ekran goruntusu, yerlestirme
+marketing_url: https://example.com
+promotional_text: App Store metinlerini depodan esitleyin.
+support_url: https://example.com/support
+whats_new: Ornek App Store metinleri eklendi.

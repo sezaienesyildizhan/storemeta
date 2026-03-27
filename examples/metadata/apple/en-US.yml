@@ -1,0 +1,11 @@
+locale: en-US
+app_name: Storemeta Example
+subtitle: Localize store listings safely
+privacy_policy_url: https://example.com/privacy
+description: |
+  Storemeta Example shows how localized App Store metadata can live in YAML files.
+keywords: metadata, screenshots, localization
+marketing_url: https://example.com
+promotional_text: Sync App Store metadata from your repository.
+support_url: https://example.com/support
+whats_new: Added example App Store metadata.
