@@ -2,6 +2,7 @@
 
 import { Command, Option } from "commander";
 
+import { runInitCommand } from "./cli/init.js";
 import { renderCommandError } from "./cli/render.js";
 
 export interface GlobalOptions {
@@ -14,7 +15,7 @@ export interface GlobalOptions {
 }
 
 export function buildCliProgram(): Command {
-  return new Command()
+  const program = new Command()
     .name("storemeta")
     .description(
       "CLI for pulling, validating, and pushing App Store Connect and Google Play metadata and screenshots.",
@@ -28,6 +29,16 @@ export function buildCliProgram(): Command {
     .option("--locale <code>", "Target locale code")
     .option("--dry-run", "Preview changes without applying them")
     .option("--verbose", "Enable verbose output");
+
+  program
+    .command("init")
+    .description("Create a starter storemeta config")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      await runInitCommand(options.config);
+    });
+
+  return program;
 }
 
 export async function runCli(argv: string[] = process.argv): Promise<void> {
