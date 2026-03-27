@@ -36,7 +36,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Create `src/cli/`.
 - [x] Create `src/config/`.
 - [x] Create `src/formats/`.
-- [ ] Create `src/locales/`.
+- [x] Create `src/locales/`.
 - [ ] Create `src/writers/`.
 - [ ] Create `src/validation/`.
 - [ ] Create `src/auth/apple/`.
