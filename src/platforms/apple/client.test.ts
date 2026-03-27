@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createAppStoreConnectClient } from "./client.js";
+import {
+  createAppStoreConnectClient,
+  requestAllAppStoreConnectPages,
+} from "./client.js";
 
 vi.mock("../../auth/apple/jwt.js", () => ({
   createAppleJwtToken: vi.fn().mockResolvedValue("apple-jwt-token"),
@@ -42,5 +45,54 @@ describe("AppStoreConnectClient", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe("requestAllAppStoreConnectPages", () => {
+  it("follows pagination links until the last page", async () => {
+    const requestJson = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [{ id: "page-1" }],
+        links: {
+          next: "https://api.appstoreconnect.apple.com/v1/apps?cursor=next",
+        },
+      })
+      .mockResolvedValueOnce({
+        data: [{ id: "page-2" }],
+        links: {},
+      });
+    const client = { requestJson } as unknown as ReturnType<
+      typeof createAppStoreConnectClient
+    >;
+
+    await expect(
+      requestAllAppStoreConnectPages(client, "/apps"),
+    ).resolves.toEqual([{ id: "page-1" }, { id: "page-2" }]);
+  });
+
+  it("stops on empty pages even if the API returns another next link", async () => {
+    const requestJson = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [{ id: "page-1" }],
+        links: {
+          next: "https://api.appstoreconnect.apple.com/v1/apps?cursor=next",
+        },
+      })
+      .mockResolvedValueOnce({
+        data: [],
+        links: {
+          next: "https://api.appstoreconnect.apple.com/v1/apps?cursor=unexpected",
+        },
+      });
+    const client = { requestJson } as unknown as ReturnType<
+      typeof createAppStoreConnectClient
+    >;
+
+    await expect(
+      requestAllAppStoreConnectPages(client, "/apps"),
+    ).resolves.toEqual([{ id: "page-1" }]);
+    expect(requestJson).toHaveBeenCalledTimes(2);
   });
 });
