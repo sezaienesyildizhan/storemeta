@@ -8,6 +8,7 @@ import type {
 } from "../../../formats/screenshot-types.js";
 import { normalizeLocaleCode } from "../../../locales/normalize.js";
 import { ensureParentDirectory } from "../../../writers/ensure-directory.js";
+import { orderScreenshotsForWrite } from "../../../writers/order-screenshots.js";
 import { resolveScreenshotFilePath } from "../../../writers/resolve-screenshot-path.js";
 import type { AppStoreConnectClient } from "../client.js";
 import { requestAllAppStoreConnectPages } from "../client.js";
@@ -248,7 +249,10 @@ export async function downloadAppleScreenshotSet(
   const assetType =
     screenshotSet.screenshotSet.attributes?.screenshotDisplayType ??
     screenshotSet.screenshotSet.id;
-  const files: ScreenshotDescriptor[] = [];
+  const downloadedScreenshots: Array<{
+    descriptor: ScreenshotDescriptor;
+    buffer: Uint8Array;
+  }> = [];
 
   for (const [index, screenshot] of screenshotSet.screenshots.entries()) {
     const position = index + 1;
@@ -257,32 +261,47 @@ export async function downloadAppleScreenshotSet(
       screenshot,
       downloadedScreenshot.extension,
     );
+    downloadedScreenshots.push({
+      descriptor: {
+        platform: "apple",
+        locale,
+        assetType,
+        filePath: "",
+        fileName,
+        position,
+      },
+      buffer: downloadedScreenshot.buffer,
+    });
+  }
+
+  const orderedFiles = orderScreenshotsForWrite(
+    downloadedScreenshots.map((screenshot) => screenshot.descriptor),
+  );
+  const files: ScreenshotDescriptor[] = [];
+
+  for (const [index, orderedFile] of orderedFiles.entries()) {
     const filePath = resolveScreenshotFilePath(screenshotsBaseDir, {
       platform: "apple",
       locale,
       assetType,
-      fileName,
+      fileName: orderedFile.fileName,
     });
 
     await ensureParentDirectory(filePath);
 
     try {
-      await writeFile(filePath, downloadedScreenshot.buffer);
+      await writeFile(filePath, downloadedScreenshots[index]!.buffer);
     } catch (cause) {
       throw new StoremetaError(
         "FILESYSTEM_ERROR",
-        `Failed to write Apple screenshot ${locale}/${assetType}/${fileName}`,
+        `Failed to write Apple screenshot ${locale}/${assetType}/${orderedFile.fileName}`,
         { cause },
       );
     }
 
     files.push({
-      platform: "apple",
-      locale,
-      assetType,
+      ...orderedFile,
       filePath,
-      fileName,
-      position,
     });
   }
 

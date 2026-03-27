@@ -362,9 +362,9 @@ describe("downloadAppleScreenshotSet", () => {
               "apple",
               "en-US",
               "APP_IPHONE_65",
-              "hero.png",
+              "1.png",
             ),
-            fileName: "hero.png",
+            fileName: "1.png",
             position: 1,
           },
         ],
@@ -376,11 +376,99 @@ describe("downloadAppleScreenshotSet", () => {
             "apple",
             "en-US",
             "APP_IPHONE_65",
-            "hero.png",
+            "1.png",
           ),
           "utf8",
         ),
       ).resolves.toBe("apple-image");
+    } finally {
+      vi.unstubAllGlobals();
+      await rm(screenshotsBaseDir, { recursive: true, force: true });
+    }
+  });
+
+  it("renames Apple screenshots into deterministic numeric file order", async () => {
+    const screenshotsBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          arrayBuffer: async () => new TextEncoder().encode("second-image").buffer,
+          headers: new Headers({
+            "content-type": "image/png",
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          arrayBuffer: async () => new TextEncoder().encode("first-image").buffer,
+          headers: new Headers({
+            "content-type": "image/png",
+          }),
+        }),
+    );
+
+    try {
+      const result = await downloadAppleScreenshotSet(screenshotsBaseDir, {
+        localizationId: "version-loc-en",
+        locale: "en-US",
+        screenshotSet: {
+          id: "set-en",
+          type: "appScreenshotSets",
+          attributes: {
+            screenshotDisplayType: "APP_IPHONE_65",
+          },
+        },
+        screenshots: [
+          {
+            id: "screenshot-b",
+            type: "appScreenshots",
+            attributes: {
+              fileName: "z-last.png",
+              imageAsset: {
+                url: "https://example.com/z-last.png",
+              },
+            },
+          },
+          {
+            id: "screenshot-a",
+            type: "appScreenshots",
+            attributes: {
+              fileName: "a-first.png",
+              imageAsset: {
+                url: "https://example.com/a-first.png",
+              },
+            },
+          },
+        ],
+      });
+
+      expect(result.files.map((file) => file.fileName)).toEqual(["1.png", "2.png"]);
+      await expect(
+        readFile(
+          join(
+            screenshotsBaseDir,
+            "apple",
+            "en-US",
+            "APP_IPHONE_65",
+            "1.png",
+          ),
+          "utf8",
+        ),
+      ).resolves.toBe("second-image");
+      await expect(
+        readFile(
+          join(
+            screenshotsBaseDir,
+            "apple",
+            "en-US",
+            "APP_IPHONE_65",
+            "2.png",
+          ),
+          "utf8",
+        ),
+      ).resolves.toBe("first-image");
     } finally {
       vi.unstubAllGlobals();
       await rm(screenshotsBaseDir, { recursive: true, force: true });
