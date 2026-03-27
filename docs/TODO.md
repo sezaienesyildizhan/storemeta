@@ -118,7 +118,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Generate example metadata directories.
 - [x] Generate example screenshot directories.
 - [x] Avoid overwriting existing files by default.
-- [ ] Use fake values only in generated examples.
+- [x] Use fake values only in generated examples.
 
 ## 12. `storemeta validate`
 

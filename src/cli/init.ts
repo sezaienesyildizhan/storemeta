@@ -20,7 +20,7 @@ apps:
       baseDir: screenshots
 
     apple:
-      appId: "1234567890"
+      appId: "0000000000"
       credentials:
         issuerIdEnv: STORE_APPLE_ISSUER_ID
         keyIdEnv: STORE_APPLE_KEY_ID
