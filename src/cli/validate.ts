@@ -5,6 +5,7 @@ import { loadConfigFile } from "../config/load-config.js";
 import { validateRootConfig } from "../config/schema.js";
 import { selectConfiguredApp } from "../config/select-app.js";
 import { resolveSelectedPlatforms } from "../config/select-platforms.js";
+import { validateMetadataFiles } from "../validation/metadata/files.js";
 
 export async function runValidateCommand(
   options: Pick<GlobalOptions, "config" | "app" | "platform">,
@@ -23,4 +24,6 @@ export async function runValidateCommand(
       requireGoogleCredentials(app.settings.google.credentials);
     }
   }
+
+  await validateMetadataFiles(loadedConfig.path, app, platforms);
 }
