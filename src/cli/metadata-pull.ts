@@ -5,6 +5,16 @@ import { StoremetaError } from "./errors.js";
 import { loadConfigFile } from "../config/load-config.js";
 import { validateRootConfig } from "../config/schema.js";
 import { selectConfiguredApp } from "../config/select-app.js";
+import { resolveSelectedPlatforms } from "../config/select-platforms.js";
+import { normalizeLocaleCode } from "../locales/normalize.js";
+import { createAppStoreConnectClient } from "../platforms/apple/client.js";
+import {
+  fetchAppleAppInfoLocalizations,
+  fetchAppleAppStoreVersionLocalizations,
+  mergeAppleLocalizations,
+  normalizeMergedAppleLocalizations,
+  writeAppleMetadataDocuments,
+} from "../platforms/apple/metadata/pull.js";
 import { createGooglePlayClient } from "../platforms/google/client.js";
 import { withGoogleEditSession } from "../platforms/google/edits.js";
 import {
@@ -12,72 +22,97 @@ import {
   normalizeGoogleListing,
   writeGoogleListingDocuments,
 } from "../platforms/google/metadata/pull.js";
-import { normalizeLocaleCode } from "../locales/normalize.js";
 
-function resolveGooglePullLocales(
-  options: Pick<GlobalOptions, "locale">,
-  defaults: string[] | undefined,
-): string[] {
-  if (options.locale !== undefined) {
-    return [normalizeLocaleCode(options.locale)];
+function filterLocalizedDocumentsByLocale<T extends { locale: string }>(
+  documents: T[],
+  locale: string | undefined,
+): T[] {
+  if (locale === undefined) {
+    return documents;
   }
 
-  return (defaults ?? []).map(normalizeLocaleCode);
-}
+  const normalizedLocale = normalizeLocaleCode(locale);
 
-function validateMetadataPullPlatform(
-  platform: GlobalOptions["platform"],
-): void {
-  if (platform === undefined || platform === "google") {
-    return;
-  }
-
-  throw new StoremetaError(
-    "CONFIG_ERROR",
-    'The current "metadata pull" command only supports --platform google',
+  return documents.filter(
+    (document) => normalizeLocaleCode(document.locale) === normalizedLocale,
   );
 }
 
 export async function runMetadataPullCommand(
   options: Pick<GlobalOptions, "config" | "app" | "locale" | "platform">,
 ): Promise<void> {
-  validateMetadataPullPlatform(options.platform);
-
   const loadedConfig = await loadConfigFile(options.config);
   const config = validateRootConfig(loadedConfig.parsed);
   const app = selectConfiguredApp(config, options.app);
-  const googleSettings = app.settings.google;
-
-  if (googleSettings === undefined) {
-    throw new StoremetaError(
-      "CONFIG_ERROR",
-      `Configured app "${app.id}" does not define Google Play settings`,
-    );
-  }
-
-  const locales = resolveGooglePullLocales(options, googleSettings.locales?.default);
+  const selectedPlatforms = resolveSelectedPlatforms(app, options.platform);
   const metadataBaseDir = resolve(
     dirname(loadedConfig.path),
     app.settings.metadata.baseDir,
   );
-  const client = createGooglePlayClient(googleSettings.credentials);
 
-  await withGoogleEditSession(
-    client,
-    googleSettings.packageName,
-    async (edit) => {
-      const listings = await fetchGoogleListingsForLocales(
+  for (const platform of selectedPlatforms) {
+    if (platform === "apple") {
+      const appleSettings = app.settings.apple;
+
+      if (appleSettings === undefined) {
+        throw new StoremetaError(
+          "CONFIG_ERROR",
+          `Configured app "${app.id}" does not define App Store Connect settings`,
+        );
+      }
+
+      const client = createAppStoreConnectClient(appleSettings.credentials);
+      const appInfoLocalizations = await fetchAppleAppInfoLocalizations(
         client,
-        googleSettings.packageName,
-        edit.id,
-        locales,
+        appleSettings.appId,
       );
-      const documents = listings.map(normalizeGoogleListing);
+      const appStoreVersionLocalizations =
+        await fetchAppleAppStoreVersionLocalizations(client, appleSettings.appId);
+      const documents = filterLocalizedDocumentsByLocale(
+        normalizeMergedAppleLocalizations(
+          mergeAppleLocalizations(
+            appInfoLocalizations,
+            appStoreVersionLocalizations,
+          ),
+        ),
+        options.locale,
+      );
 
-      await writeGoogleListingDocuments(metadataBaseDir, documents);
-    },
-    {
-      autoCommit: false,
-    },
-  );
+      await writeAppleMetadataDocuments(metadataBaseDir, documents);
+      continue;
+    }
+
+    const googleSettings = app.settings.google;
+
+    if (googleSettings === undefined) {
+      throw new StoremetaError(
+        "CONFIG_ERROR",
+        `Configured app "${app.id}" does not define Google Play settings`,
+      );
+    }
+
+    const locales = options.locale
+      ? [normalizeLocaleCode(options.locale)]
+      : (googleSettings.locales?.default ?? []).map(normalizeLocaleCode);
+    const client = createGooglePlayClient(googleSettings.credentials);
+
+    await withGoogleEditSession(
+      client,
+      googleSettings.packageName,
+      async (edit) => {
+        const listings = await fetchGoogleListingsForLocales(
+          client,
+          googleSettings.packageName,
+          edit.id,
+          locales,
+        );
+        const documents = listings.map(normalizeGoogleListing);
+
+        await writeGoogleListingDocuments(metadataBaseDir, documents);
+      },
+      {
+        autoCommit: false,
+      },
+    );
+  }
 }
