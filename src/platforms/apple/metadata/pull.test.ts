@@ -4,6 +4,8 @@ import {
   fetchAppleAppInfoLocalizations,
   fetchAppleAppStoreVersionLocalizations,
   mergeAppleLocalizations,
+  normalizeMergedAppleLocalization,
+  normalizeMergedAppleLocalizations,
   selectPreferredAppleAppStoreVersion,
 } from "./pull.js";
 import type { AppStoreConnectClient } from "../client.js";
@@ -320,6 +322,72 @@ describe("mergeAppleLocalizations", () => {
             name: "Ornek",
           },
         },
+      },
+    ]);
+  });
+});
+
+describe("normalizeMergedAppleLocalization", () => {
+  it("maps merged Apple localization data into the local metadata schema", () => {
+    expect(
+      normalizeMergedAppleLocalization({
+        locale: "en_us",
+        appInfoLocalization: {
+          id: "app-info-en",
+          type: "appInfoLocalizations",
+          attributes: {
+            locale: "en-US",
+            name: "Example App",
+            subtitle: "Subtitle",
+            privacyPolicyUrl: "https://example.com/privacy",
+          },
+        },
+        appStoreVersionLocalization: {
+          id: "version-en",
+          type: "appStoreVersionLocalizations",
+          attributes: {
+            locale: "en-US",
+            description: "Description",
+            keywords: "one,two",
+            marketingUrl: "https://example.com",
+            promotionalText: "Promo",
+            supportUrl: "https://example.com/support",
+            whatsNew: "Bug fixes",
+          },
+        },
+      }),
+    ).toEqual({
+      locale: "en-US",
+      app_name: "Example App",
+      subtitle: "Subtitle",
+      privacy_policy_url: "https://example.com/privacy",
+      description: "Description",
+      keywords: "one,two",
+      marketing_url: "https://example.com",
+      promotional_text: "Promo",
+      support_url: "https://example.com/support",
+      whats_new: "Bug fixes",
+    });
+  });
+});
+
+describe("normalizeMergedAppleLocalizations", () => {
+  it("normalizes all merged Apple localizations in order", () => {
+    expect(
+      normalizeMergedAppleLocalizations([
+        {
+          locale: "tr",
+        },
+        {
+          locale: "en-US",
+        },
+      ]),
+    ).toEqual([
+      {
+        locale: "tr",
+      },
+      {
+        locale: "en-US",
       },
     ]);
   });

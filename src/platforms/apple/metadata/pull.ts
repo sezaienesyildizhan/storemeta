@@ -1,3 +1,5 @@
+import type { AppleMetadataDocument } from "../../../formats/metadata-types.js";
+import { normalizeLocaleCode } from "../../../locales/normalize.js";
 import type { AppStoreConnectClient } from "../client.js";
 import { requestAllAppStoreConnectPages } from "../client.js";
 import type {
@@ -198,4 +200,30 @@ export function mergeAppleLocalizations(
   return [...mergedLocalizations.values()].sort((left, right) =>
     left.locale.localeCompare(right.locale),
   );
+}
+
+export function normalizeMergedAppleLocalization(
+  localization: MergedAppleLocalization,
+): AppleMetadataDocument {
+  const appInfoAttributes = localization.appInfoLocalization?.attributes;
+  const versionAttributes = localization.appStoreVersionLocalization?.attributes;
+
+  return {
+    locale: normalizeLocaleCode(localization.locale),
+    app_name: appInfoAttributes?.name,
+    subtitle: appInfoAttributes?.subtitle,
+    privacy_policy_url: appInfoAttributes?.privacyPolicyUrl,
+    description: versionAttributes?.description,
+    keywords: versionAttributes?.keywords,
+    marketing_url: versionAttributes?.marketingUrl,
+    promotional_text: versionAttributes?.promotionalText,
+    support_url: versionAttributes?.supportUrl,
+    whats_new: versionAttributes?.whatsNew,
+  };
+}
+
+export function normalizeMergedAppleLocalizations(
+  localizations: MergedAppleLocalization[],
+): AppleMetadataDocument[] {
+  return localizations.map(normalizeMergedAppleLocalization);
 }
