@@ -220,7 +220,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Delete existing screenshots when replacement behavior is selected.
 - [x] Reserve upload slots.
 - [x] Upload binaries to Apple-provided URLs.
-- [ ] Commit uploads with checksums.
+- [x] Commit uploads with checksums.
 - [ ] Support `--dry-run`.
 - [ ] Print per-locale and per-display-type progress.
 

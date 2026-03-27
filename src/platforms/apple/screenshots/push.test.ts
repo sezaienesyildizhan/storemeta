@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   clearAppleScreenshotUploadTargets,
+  commitAppleScreenshotUploads,
   loadAppleScreenshotSets,
   reserveAppleScreenshotUploads,
   uploadReservedAppleScreenshots,
@@ -17,12 +19,14 @@ import type { AppStoreConnectClient } from "../client.js";
 const {
   fetchAppleScreenshotSetsForLocalizationsMock,
   fetchAppleScreenshotsForSetsMock,
+  patchAppStoreConnectJsonMock,
   postAppStoreConnectJsonMock,
   requestAllAppStoreConnectPagesMock,
   resolveEditableAppleAppStoreVersionResourceMock,
 } = vi.hoisted(() => ({
   fetchAppleScreenshotSetsForLocalizationsMock: vi.fn(),
   fetchAppleScreenshotsForSetsMock: vi.fn(),
+  patchAppStoreConnectJsonMock: vi.fn(),
   postAppStoreConnectJsonMock: vi.fn(),
   requestAllAppStoreConnectPagesMock: vi.fn(),
   resolveEditableAppleAppStoreVersionResourceMock: vi.fn(),
@@ -44,6 +48,7 @@ vi.mock("../client.js", async () => {
 
   return {
     ...actual,
+    patchAppStoreConnectJson: patchAppStoreConnectJsonMock,
     postAppStoreConnectJson: postAppStoreConnectJsonMock,
     requestAllAppStoreConnectPages: requestAllAppStoreConnectPagesMock,
   };
@@ -62,6 +67,7 @@ vi.mock("../metadata/push.js", async () => {
 beforeEach(() => {
   fetchAppleScreenshotsForSetsMock.mockReset();
   fetchAppleScreenshotSetsForLocalizationsMock.mockReset();
+  patchAppStoreConnectJsonMock.mockReset();
   postAppStoreConnectJsonMock.mockReset();
   requestAllAppStoreConnectPagesMock.mockReset();
   resolveEditableAppleAppStoreVersionResourceMock.mockReset();
@@ -834,6 +840,68 @@ describe("uploadReservedAppleScreenshots", () => {
         ]),
       ).rejects.toThrow(
         /Apple screenshot upload failed for en-US\/APP_IPHONE_65\/1.png with 500 Internal Server Error/,
+      );
+    } finally {
+      await rm(screenshotsBaseDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("commitAppleScreenshotUploads", () => {
+  it("commits Apple screenshot uploads with an md5 checksum", async () => {
+    const screenshotsBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+    const screenshotPath = join(screenshotsBaseDir, "1.png");
+    const screenshotContents = "apple-image";
+
+    await writeFile(screenshotPath, screenshotContents);
+
+    try {
+      const client = {} as AppStoreConnectClient;
+      const expectedChecksum = createHash("md5")
+        .update(screenshotContents)
+        .digest("hex");
+
+      await expect(
+        commitAppleScreenshotUploads(client, [
+          {
+            locale: "en-US",
+            assetType: "APP_IPHONE_65",
+            screenshotSetId: "set-en-65",
+            screenshotId: "screenshot-en-1",
+            file: {
+              platform: "apple",
+              locale: "en-US",
+              assetType: "APP_IPHONE_65",
+              filePath: screenshotPath,
+              fileName: "1.png",
+              position: 1,
+            },
+            uploadOperations: [],
+          },
+        ]),
+      ).resolves.toEqual([
+        {
+          locale: "en-US",
+          assetType: "APP_IPHONE_65",
+          screenshotId: "screenshot-en-1",
+          filePath: screenshotPath,
+          sourceFileChecksum: expectedChecksum,
+        },
+      ]);
+
+      expect(patchAppStoreConnectJsonMock).toHaveBeenCalledWith(
+        client,
+        "/appScreenshots/screenshot-en-1",
+        {
+          data: {
+            id: "screenshot-en-1",
+            type: "appScreenshots",
+            attributes: {
+              uploaded: true,
+              sourceFileChecksum: expectedChecksum,
+            },
+          },
+        },
       );
     } finally {
       await rm(screenshotsBaseDir, { recursive: true, force: true });

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFile, readdir, stat } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 
@@ -9,6 +10,7 @@ import type {
 import { normalizeLocaleCode } from "../../../locales/normalize.js";
 import type { AppStoreConnectClient } from "../client.js";
 import {
+  patchAppStoreConnectJson,
   postAppStoreConnectJson,
   requestAllAppStoreConnectPages,
 } from "../client.js";
@@ -762,6 +764,97 @@ export async function uploadReservedAppleScreenshots(
   }
 
   return uploadResults.sort((left, right) => {
+    const localeOrder = left.locale.localeCompare(right.locale);
+
+    if (localeOrder !== 0) {
+      return localeOrder;
+    }
+
+    const assetTypeOrder = left.assetType.localeCompare(right.assetType);
+
+    if (assetTypeOrder !== 0) {
+      return assetTypeOrder;
+    }
+
+    return left.filePath.localeCompare(right.filePath);
+  });
+}
+
+interface AppleAppScreenshotCommitPayload {
+  data: {
+    id: string;
+    type: "appScreenshots";
+    attributes: {
+      uploaded: true;
+      sourceFileChecksum: string;
+    };
+  };
+}
+
+function createAppleScreenshotChecksum(fileContents: Buffer): string {
+  return createHash("md5").update(fileContents).digest("hex");
+}
+
+function mapAppleScreenshotCommitPayload(
+  screenshotId: string,
+  sourceFileChecksum: string,
+): AppleAppScreenshotCommitPayload {
+  return {
+    data: {
+      id: screenshotId,
+      type: "appScreenshots",
+      attributes: {
+        uploaded: true,
+        sourceFileChecksum,
+      },
+    },
+  };
+}
+
+export interface AppleCommittedScreenshotResult {
+  locale: string;
+  assetType: string;
+  screenshotId: string;
+  filePath: string;
+  sourceFileChecksum: string;
+}
+
+export async function commitAppleScreenshotUpload(
+  client: AppStoreConnectClient,
+  reservation: AppleReservedScreenshotUpload,
+): Promise<AppleCommittedScreenshotResult> {
+  const fileContents = await readFile(reservation.file.filePath);
+  const sourceFileChecksum = createAppleScreenshotChecksum(fileContents);
+
+  await patchAppStoreConnectJson(
+    client,
+    `/appScreenshots/${encodeURIComponent(reservation.screenshotId)}`,
+    mapAppleScreenshotCommitPayload(
+      reservation.screenshotId,
+      sourceFileChecksum,
+    ),
+  );
+
+  return {
+    locale: reservation.locale,
+    assetType: reservation.assetType,
+    screenshotId: reservation.screenshotId,
+    filePath: reservation.file.filePath,
+    sourceFileChecksum,
+  };
+}
+
+export async function commitAppleScreenshotUploads(
+  client: AppStoreConnectClient,
+  reservations: AppleReservedScreenshotUpload[],
+): Promise<AppleCommittedScreenshotResult[]> {
+  const commitResults: AppleCommittedScreenshotResult[] = [];
+
+  for (const reservation of reservations) {
+    commitResults.push(await commitAppleScreenshotUpload(client, reservation));
+  }
+
+  return commitResults.sort((left, right) => {
     const localeOrder = left.locale.localeCompare(right.locale);
 
     if (localeOrder !== 0) {
