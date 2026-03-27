@@ -419,6 +419,57 @@ function mapAppleMetadataToAppStoreVersionLocalizationPayload(
   };
 }
 
+interface AppleAppStoreVersionLocalizationCreatePayload {
+  data: {
+    type: "appStoreVersionLocalizations";
+    attributes: {
+      locale: string;
+      description?: string;
+      keywords?: string;
+      marketingUrl?: string;
+      promotionalText?: string;
+      supportUrl?: string;
+      whatsNew?: string;
+    };
+    relationships: {
+      appStoreVersion: {
+        data: {
+          type: "appStoreVersions";
+          id: string;
+        };
+      };
+    };
+  };
+}
+
+function mapAppleMetadataToAppStoreVersionLocalizationCreatePayload(
+  document: AppleMetadataDocument,
+  appStoreVersionId: string,
+): AppleAppStoreVersionLocalizationCreatePayload {
+  return {
+    data: {
+      type: "appStoreVersionLocalizations",
+      attributes: {
+        locale: document.locale,
+        description: document.description,
+        keywords: document.keywords,
+        marketingUrl: document.marketing_url,
+        promotionalText: document.promotional_text,
+        supportUrl: document.support_url,
+        whatsNew: document.whats_new,
+      },
+      relationships: {
+        appStoreVersion: {
+          data: {
+            type: "appStoreVersions",
+            id: appStoreVersionId,
+          },
+        },
+      },
+    },
+  };
+}
+
 async function listAppleAppStoreVersionLocalizations(
   client: AppStoreConnectClient,
   appStoreVersionId: string,
@@ -430,6 +481,11 @@ async function listAppleAppStoreVersionLocalizations(
 }
 
 export interface AppleUpdatedAppStoreVersionLocalizationResult {
+  locale: string;
+  localizationId: string;
+}
+
+export interface AppleCreatedAppStoreVersionLocalizationResult {
   locale: string;
   localizationId: string;
 }
@@ -469,6 +525,54 @@ export async function updateExistingAppleAppStoreVersionLocalizations(
       locale: document.locale,
       localizationId: localization.id,
     });
+  }
+
+  return results.sort((left, right) => left.locale.localeCompare(right.locale));
+}
+
+export async function createMissingAppleAppStoreVersionLocalizations(
+  client: AppStoreConnectClient,
+  appStoreVersionId: string,
+  documents: AppleMetadataDocument[],
+): Promise<AppleCreatedAppStoreVersionLocalizationResult[]> {
+  const localizations = await listAppleAppStoreVersionLocalizations(
+    client,
+    appStoreVersionId,
+  );
+  const existingLocales = new Set(
+    localizations
+      .map((localization) => localization.attributes.locale)
+      .filter((locale): locale is string => locale !== undefined),
+  );
+  const results: AppleCreatedAppStoreVersionLocalizationResult[] = [];
+
+  for (const document of documents) {
+    if (existingLocales.has(document.locale)) {
+      continue;
+    }
+
+    const response =
+      await postAppStoreConnectJson<AppleAppStoreVersionLocalizationPayload>(
+        client,
+        "/appStoreVersionLocalizations",
+        mapAppleMetadataToAppStoreVersionLocalizationCreatePayload(
+          document,
+          appStoreVersionId,
+        ),
+      );
+
+    if (response.data.id === undefined) {
+      throw new StoremetaError(
+        "API_ERROR",
+        `App Store Connect did not return an app store version localization id for locale ${document.locale}`,
+      );
+    }
+
+    results.push({
+      locale: document.locale,
+      localizationId: response.data.id,
+    });
+    existingLocales.add(document.locale);
   }
 
   return results.sort((left, right) => left.locale.localeCompare(right.locale));

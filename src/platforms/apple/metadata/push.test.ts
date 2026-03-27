@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createMissingAppleAppInfoLocalizations,
+  createMissingAppleAppStoreVersionLocalizations,
   loadAppleMetadataDocuments,
   updateExistingAppleAppStoreVersionLocalizations,
   updateExistingAppleAppInfoLocalizations,
@@ -434,6 +435,82 @@ describe("updateExistingAppleAppStoreVersionLocalizations", () => {
             promotionalText: "Promo",
             supportUrl: "https://example.com/support",
             whatsNew: "Bug fixes",
+          },
+        },
+      },
+    );
+  });
+});
+
+describe("createMissingAppleAppStoreVersionLocalizations", () => {
+  it("creates only Apple app store version localizations that do not already exist", async () => {
+    requestAllAppStoreConnectPagesMock.mockResolvedValueOnce([
+      {
+        id: "version-loc-en",
+        type: "appStoreVersionLocalizations",
+        attributes: {
+          locale: "en-US",
+        },
+      },
+    ]);
+    postAppStoreConnectJsonMock.mockResolvedValueOnce({
+      data: {
+        id: "version-loc-tr",
+        type: "appStoreVersionLocalizations",
+        attributes: {
+          locale: "tr",
+        },
+      },
+    });
+
+    const client = {} as AppStoreConnectClient;
+
+    await expect(
+      createMissingAppleAppStoreVersionLocalizations(client, "version-1", [
+        {
+          locale: "en-US",
+          description: "Description",
+        },
+        {
+          locale: "tr",
+          description: "Aciklama",
+          keywords: "bir,iki",
+          marketing_url: "https://example.com/tr",
+          promotional_text: "Promosyon",
+          support_url: "https://example.com/destek",
+          whats_new: "Hata duzeltmeleri",
+        },
+      ]),
+    ).resolves.toEqual([
+      {
+        locale: "tr",
+        localizationId: "version-loc-tr",
+      },
+    ]);
+
+    expect(postAppStoreConnectJsonMock).toHaveBeenCalledTimes(1);
+    expect(postAppStoreConnectJsonMock).toHaveBeenCalledWith(
+      client,
+      "/appStoreVersionLocalizations",
+      {
+        data: {
+          type: "appStoreVersionLocalizations",
+          attributes: {
+            locale: "tr",
+            description: "Aciklama",
+            keywords: "bir,iki",
+            marketingUrl: "https://example.com/tr",
+            promotionalText: "Promosyon",
+            supportUrl: "https://example.com/destek",
+            whatsNew: "Hata duzeltmeleri",
+          },
+          relationships: {
+            appStoreVersion: {
+              data: {
+                type: "appStoreVersions",
+                id: "version-1",
+              },
+            },
           },
         },
       },
