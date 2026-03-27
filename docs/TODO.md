@@ -41,7 +41,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Create `src/validation/`.
 - [x] Create `src/auth/apple/`.
 - [x] Create `src/auth/google/`.
-- [ ] Create `src/platforms/apple/metadata/`.
+- [x] Create `src/platforms/apple/metadata/`.
 - [ ] Create `src/platforms/apple/screenshots/`.
 - [ ] Create `src/platforms/google/metadata/`.
 - [ ] Create `src/platforms/google/screenshots/`.
