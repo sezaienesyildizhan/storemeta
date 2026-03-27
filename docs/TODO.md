@@ -214,7 +214,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 22. Apple Screenshots Push
 
-- [ ] Load and validate local screenshot sets.
+- [x] Load and validate local screenshot sets.
 - [ ] Resolve or create required localizations.
 - [ ] Resolve or create screenshot sets by display type.
 - [ ] Delete existing screenshots when replacement behavior is selected.
