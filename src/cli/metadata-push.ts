@@ -1,6 +1,7 @@
 import { dirname, resolve } from "node:path";
 
 import type { GlobalOptions } from "../cli.js";
+import type { CommandSummary } from "./result-types.js";
 import { StoremetaError } from "./errors.js";
 import { loadConfigFile } from "../config/load-config.js";
 import { validateRootConfig } from "../config/schema.js";
@@ -29,7 +30,7 @@ function validateMetadataPushPlatform(
 
 export async function runMetadataPushCommand(
   options: Pick<GlobalOptions, "config" | "app" | "platform" | "locale" | "dryRun">,
-): Promise<void> {
+): Promise<CommandSummary> {
   validateMetadataPushPlatform(options.platform);
 
   const loadedConfig = await loadConfigFile(options.config);
@@ -56,9 +57,24 @@ export async function runMetadataPushCommand(
       normalizeLocaleCode(document.locale) === selectedLocale,
   );
   const updates = mapGoogleMetadataDocuments(documents);
+  const results = updates.map((update) => ({
+    target: update.language,
+    success: true,
+    message: options.dryRun ? "Would upload listing metadata" : "Pending upload",
+  }));
 
   if (options.dryRun) {
-    return;
+    for (const update of updates) {
+      console.log(`DRY RUN google metadata ${update.language}`);
+    }
+
+    return {
+      status: "success",
+      successCount: results.length,
+      failureCount: 0,
+      skippedCount: 0,
+      results,
+    };
   }
 
   const client = createGooglePlayClient(googleSettings.credentials);
@@ -69,6 +85,22 @@ export async function runMetadataPushCommand(
       googleSettings.packageName,
       edit.id,
       updates,
+      {
+        onUploaded: (update) => {
+          console.log(`Uploaded google metadata ${update.language}`);
+        },
+      },
     );
   });
+
+  return {
+    status: "success",
+    successCount: results.length,
+    failureCount: 0,
+    skippedCount: 0,
+    results: results.map((result) => ({
+      ...result,
+      message: "Uploaded listing metadata",
+    })),
+  };
 }

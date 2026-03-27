@@ -125,8 +125,12 @@ export async function uploadGoogleListings(
   packageName: string,
   editId: string,
   updates: GoogleStoreListingUpdate[],
+  options?: {
+    onUploaded?: (update: GoogleStoreListingUpdate) => void;
+  },
 ): Promise<void> {
   for (const update of updates) {
     await uploadGoogleListing(client, packageName, editId, update);
+    options?.onUploaded?.(update);
   }
 }

@@ -75,13 +75,14 @@ export function buildCliProgram(): Command {
     .description("Push local metadata to the store")
     .action(async () => {
       const options = program.opts<GlobalOptions>();
-      await runMetadataPushCommand({
+      const summary = await runMetadataPushCommand({
         config: options.config,
         app: options.app,
         platform: options.platform,
         locale: options.locale,
         dryRun: options.dryRun,
       });
+      console.log(renderCommandSummary(summary));
     });
 
   return program;
