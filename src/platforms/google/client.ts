@@ -8,7 +8,7 @@ const GOOGLE_PLAY_API_BASE_URL =
 export interface GooglePlayRequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   headers?: Record<string, string>;
-  body?: string;
+  body?: BodyInit;
 }
 
 export class GooglePlayClient {
@@ -28,7 +28,11 @@ export class GooglePlayClient {
     options: GooglePlayRequestOptions = {},
   ): Promise<Response> {
     const accessToken = await getGoogleAccessToken(this.credentials, this.env);
-    const response = await fetch(`${GOOGLE_PLAY_API_BASE_URL}${path}`, {
+    const requestUrl =
+      path.startsWith("https://") || path.startsWith("http://")
+        ? path
+        : `${GOOGLE_PLAY_API_BASE_URL}${path}`;
+    const response = await fetch(requestUrl, {
       method: options.method ?? "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,

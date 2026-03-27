@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 
 import { StoremetaError } from "../../../cli/errors.js";
@@ -181,6 +181,18 @@ interface GooglePlayDeleteImagesResponse {
   deleted?: GooglePlayImage[];
 }
 
+interface GooglePlayUploadImageResponse {
+  image?: GooglePlayImage;
+}
+
+export interface GoogleScreenshotUploadResult {
+  targetLocale: string;
+  imageType: GoogleScreenshotImageType;
+  position: number;
+  filePath: string;
+  image: GooglePlayImage;
+}
+
 export async function loadGoogleScreenshotSets(
   screenshotsBaseDir: string,
 ): Promise<ScreenshotSetDescriptor[]> {
@@ -310,6 +322,23 @@ export function mapGoogleScreenshotSetsToTargets(
   });
 }
 
+function getGoogleScreenshotContentType(filePath: string): string {
+  const extension = extname(filePath).toLowerCase();
+
+  if (extension === ".png") {
+    return "image/png";
+  }
+
+  if (extension === ".jpg" || extension === ".jpeg") {
+    return "image/jpeg";
+  }
+
+  throw new StoremetaError(
+    "VALIDATION_ERROR",
+    `${filePath}: unsupported screenshot file extension`,
+  );
+}
+
 export async function clearGoogleScreenshotTargets(
   client: GooglePlayClient,
   packageName: string,
@@ -356,5 +385,89 @@ export async function clearGoogleScreenshotTargets(
     }
 
     return left.imageType.localeCompare(right.imageType);
+  });
+}
+
+export async function uploadGoogleScreenshotTarget(
+  client: GooglePlayClient,
+  packageName: string,
+  editId: string,
+  uploadTarget: GoogleScreenshotUploadTarget,
+): Promise<GoogleScreenshotUploadResult[]> {
+  const uploadResults: GoogleScreenshotUploadResult[] = [];
+
+  for (const file of uploadTarget.files) {
+    const contentType = getGoogleScreenshotContentType(file.filePath);
+    const fileContents = await readFile(file.filePath);
+    const response = await client.requestJson<GooglePlayUploadImageResponse>(
+      `https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${encodeURIComponent(packageName)}/edits/${encodeURIComponent(editId)}/listings/${encodeURIComponent(uploadTarget.targetLocale)}/${encodeURIComponent(uploadTarget.imageType)}?uploadType=media`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": contentType,
+        },
+        body: fileContents,
+      },
+    );
+
+    if (response.image === undefined) {
+      throw new StoremetaError(
+        "API_ERROR",
+        `Google Play upload did not return image data for ${uploadTarget.targetLocale}/${uploadTarget.imageType}/${file.fileName}`,
+      );
+    }
+
+    uploadResults.push({
+      targetLocale: uploadTarget.targetLocale,
+      imageType: uploadTarget.imageType,
+      position: file.position,
+      filePath: file.filePath,
+      image: response.image,
+    });
+  }
+
+  return uploadResults;
+}
+
+export async function uploadGoogleScreenshotTargets(
+  client: GooglePlayClient,
+  packageName: string,
+  editId: string,
+  uploadTargets: GoogleScreenshotUploadTarget[],
+  options?: {
+    onUploaded?: (result: GoogleScreenshotUploadResult) => void | Promise<void>;
+  },
+): Promise<GoogleScreenshotUploadResult[]> {
+  const uploadResults: GoogleScreenshotUploadResult[] = [];
+
+  for (const uploadTarget of uploadTargets) {
+    for (const result of await uploadGoogleScreenshotTarget(
+      client,
+      packageName,
+      editId,
+      uploadTarget,
+    )) {
+      uploadResults.push(result);
+
+      if (options?.onUploaded !== undefined) {
+        await options.onUploaded(result);
+      }
+    }
+  }
+
+  return uploadResults.sort((left, right) => {
+    const localeOrder = left.targetLocale.localeCompare(right.targetLocale);
+
+    if (localeOrder !== 0) {
+      return localeOrder;
+    }
+
+    const imageTypeOrder = left.imageType.localeCompare(right.imageType);
+
+    if (imageTypeOrder !== 0) {
+      return imageTypeOrder;
+    }
+
+    return left.position - right.position;
   });
 }

@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -8,6 +8,7 @@ import {
   clearGoogleScreenshotTargets,
   loadGoogleScreenshotSets,
   mapGoogleScreenshotSetsToTargets,
+  uploadGoogleScreenshotTarget,
 } from "./push.js";
 import type { GooglePlayClient } from "../client.js";
 
@@ -274,5 +275,67 @@ describe("clearGoogleScreenshotTargets", () => {
         method: "DELETE",
       },
     );
+  });
+});
+
+describe("uploadGoogleScreenshotTarget", () => {
+  it("uploads local screenshot files to the Google media upload endpoint", async () => {
+    const screenshotsBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+    const screenshotPath = join(screenshotsBaseDir, "1.png");
+    const requestJson = vi.fn().mockResolvedValue({
+      image: { id: "image-1", url: "https://example.com/image-1.png" },
+    });
+    const client = { requestJson } as unknown as GooglePlayClient;
+
+    await writeFile(screenshotPath, "binary-image");
+
+    try {
+      const fileContents = await readFile(screenshotPath);
+
+      await expect(
+        uploadGoogleScreenshotTarget(client, "com.example.app", "edit-123", {
+          platform: "google",
+          locale: "en-US",
+          sourceLocale: "en-US",
+          targetLocale: "en-US",
+          assetType: "phoneScreenshots",
+          imageType: "phoneScreenshots",
+          files: [
+            {
+              platform: "google",
+              locale: "en-US",
+              assetType: "phoneScreenshots",
+              filePath: screenshotPath,
+              fileName: "1.png",
+              position: 1,
+            },
+          ],
+        }),
+      ).resolves.toEqual([
+        {
+          targetLocale: "en-US",
+          imageType: "phoneScreenshots",
+          position: 1,
+          filePath: screenshotPath,
+          image: {
+            id: "image-1",
+            url: "https://example.com/image-1.png",
+          },
+        },
+      ]);
+
+      expect(requestJson).toHaveBeenCalledWith(
+        "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/com.example.app/edits/edit-123/listings/en-US/phoneScreenshots?uploadType=media",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "image/png",
+          },
+          body: fileContents,
+        },
+      );
+    } finally {
+      await rm(screenshotsBaseDir, { recursive: true, force: true });
+    }
   });
 });
