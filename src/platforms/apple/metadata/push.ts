@@ -11,6 +11,7 @@ import {
 import type { AppStoreConnectClient } from "../client.js";
 import {
   patchAppStoreConnectJson,
+  postAppStoreConnectJson,
   requestAllAppStoreConnectPages,
 } from "../client.js";
 import type {
@@ -255,6 +256,51 @@ function mapAppleMetadataToAppInfoLocalizationPayload(
   };
 }
 
+interface AppleAppInfoLocalizationCreatePayload {
+  data: {
+    type: "appInfoLocalizations";
+    attributes: {
+      locale: string;
+      name?: string;
+      subtitle?: string;
+      privacyPolicyUrl?: string;
+    };
+    relationships: {
+      appInfo: {
+        data: {
+          type: "appInfos";
+          id: string;
+        };
+      };
+    };
+  };
+}
+
+function mapAppleMetadataToAppInfoLocalizationCreatePayload(
+  document: AppleMetadataDocument,
+  appInfoId: string,
+): AppleAppInfoLocalizationCreatePayload {
+  return {
+    data: {
+      type: "appInfoLocalizations",
+      attributes: {
+        locale: document.locale,
+        name: document.app_name,
+        subtitle: document.subtitle,
+        privacyPolicyUrl: document.privacy_policy_url,
+      },
+      relationships: {
+        appInfo: {
+          data: {
+            type: "appInfos",
+            id: appInfoId,
+          },
+        },
+      },
+    },
+  };
+}
+
 async function listAppleAppInfoLocalizations(
   client: AppStoreConnectClient,
   appInfoId: string,
@@ -266,6 +312,11 @@ async function listAppleAppInfoLocalizations(
 }
 
 export interface AppleUpdatedAppInfoLocalizationResult {
+  locale: string;
+  localizationId: string;
+}
+
+export interface AppleCreatedAppInfoLocalizationResult {
   locale: string;
   localizationId: string;
 }
@@ -299,6 +350,47 @@ export async function updateExistingAppleAppInfoLocalizations(
       locale: document.locale,
       localizationId: localization.id,
     });
+  }
+
+  return results.sort((left, right) => left.locale.localeCompare(right.locale));
+}
+
+export async function createMissingAppleAppInfoLocalizations(
+  client: AppStoreConnectClient,
+  appInfoId: string,
+  documents: AppleMetadataDocument[],
+): Promise<AppleCreatedAppInfoLocalizationResult[]> {
+  const localizations = await listAppleAppInfoLocalizations(client, appInfoId);
+  const existingLocales = new Set(
+    localizations
+      .map((localization) => localization.attributes.locale)
+      .filter((locale): locale is string => locale !== undefined),
+  );
+  const results: AppleCreatedAppInfoLocalizationResult[] = [];
+
+  for (const document of documents) {
+    if (existingLocales.has(document.locale)) {
+      continue;
+    }
+
+    const response = await postAppStoreConnectJson<AppleAppInfoLocalizationPayload>(
+      client,
+      "/appInfoLocalizations",
+      mapAppleMetadataToAppInfoLocalizationCreatePayload(document, appInfoId),
+    );
+
+    if (response.data.id === undefined) {
+      throw new StoremetaError(
+        "API_ERROR",
+        `App Store Connect did not return an app info localization id for locale ${document.locale}`,
+      );
+    }
+
+    results.push({
+      locale: document.locale,
+      localizationId: response.data.id,
+    });
+    existingLocales.add(document.locale);
   }
 
   return results.sort((left, right) => left.locale.localeCompare(right.locale));

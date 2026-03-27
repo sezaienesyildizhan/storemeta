@@ -197,7 +197,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Resolve the target app info resource.
 - [x] Resolve the target editable app store version resource.
 - [x] Update existing app info localizations.
-- [ ] Create missing app info localizations when allowed.
+- [x] Create missing app info localizations when allowed.
 - [ ] Update existing app store version localizations.
 - [ ] Create missing app store version localizations when allowed.
 - [ ] Support `--dry-run`.

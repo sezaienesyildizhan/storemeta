@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  createMissingAppleAppInfoLocalizations,
   loadAppleMetadataDocuments,
   updateExistingAppleAppInfoLocalizations,
   resolveAppleAppInfoResource,
@@ -15,9 +16,11 @@ import {
 import type { AppStoreConnectClient } from "../client.js";
 
 const {
+  postAppStoreConnectJsonMock,
   requestAllAppStoreConnectPagesMock,
   patchAppStoreConnectJsonMock,
 } = vi.hoisted(() => ({
+  postAppStoreConnectJsonMock: vi.fn(),
   requestAllAppStoreConnectPagesMock: vi.fn(),
   patchAppStoreConnectJsonMock: vi.fn(),
 }));
@@ -28,11 +31,13 @@ vi.mock("../client.js", async () => {
   return {
     ...actual,
     patchAppStoreConnectJson: patchAppStoreConnectJsonMock,
+    postAppStoreConnectJson: postAppStoreConnectJsonMock,
     requestAllAppStoreConnectPages: requestAllAppStoreConnectPagesMock,
   };
 });
 
 beforeEach(() => {
+  postAppStoreConnectJsonMock.mockReset();
   requestAllAppStoreConnectPagesMock.mockReset();
   patchAppStoreConnectJsonMock.mockReset();
 });
@@ -294,6 +299,76 @@ describe("updateExistingAppleAppInfoLocalizations", () => {
             name: "Example App",
             subtitle: "Subtitle",
             privacyPolicyUrl: "https://example.com/privacy",
+          },
+        },
+      },
+    );
+  });
+});
+
+describe("createMissingAppleAppInfoLocalizations", () => {
+  it("creates only Apple app info localizations that do not already exist", async () => {
+    requestAllAppStoreConnectPagesMock.mockResolvedValueOnce([
+      {
+        id: "app-info-loc-en",
+        type: "appInfoLocalizations",
+        attributes: {
+          locale: "en-US",
+        },
+      },
+    ]);
+    postAppStoreConnectJsonMock.mockResolvedValueOnce({
+      data: {
+        id: "app-info-loc-tr",
+        type: "appInfoLocalizations",
+        attributes: {
+          locale: "tr",
+        },
+      },
+    });
+
+    const client = {} as AppStoreConnectClient;
+
+    await expect(
+      createMissingAppleAppInfoLocalizations(client, "app-info-1", [
+        {
+          locale: "en-US",
+          app_name: "Example App",
+        },
+        {
+          locale: "tr",
+          app_name: "Ornek",
+          subtitle: "Alt baslik",
+          privacy_policy_url: "https://example.com/privacy-tr",
+        },
+      ]),
+    ).resolves.toEqual([
+      {
+        locale: "tr",
+        localizationId: "app-info-loc-tr",
+      },
+    ]);
+
+    expect(postAppStoreConnectJsonMock).toHaveBeenCalledTimes(1);
+    expect(postAppStoreConnectJsonMock).toHaveBeenCalledWith(
+      client,
+      "/appInfoLocalizations",
+      {
+        data: {
+          type: "appInfoLocalizations",
+          attributes: {
+            locale: "tr",
+            name: "Ornek",
+            subtitle: "Alt baslik",
+            privacyPolicyUrl: "https://example.com/privacy-tr",
+          },
+          relationships: {
+            appInfo: {
+              data: {
+                type: "appInfos",
+                id: "app-info-1",
+              },
+            },
           },
         },
       },
