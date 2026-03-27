@@ -221,7 +221,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Reserve upload slots.
 - [x] Upload binaries to Apple-provided URLs.
 - [x] Commit uploads with checksums.
-- [ ] Support `--dry-run`.
+- [x] Support `--dry-run`.
 - [ ] Print per-locale and per-display-type progress.
 
 ## 23. Shared Error Handling And UX
