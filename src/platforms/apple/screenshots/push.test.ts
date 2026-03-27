@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  clearAppleScreenshotUploadTargets,
   loadAppleScreenshotSets,
   resolveOrCreateAppleScreenshotUploadTargets,
   resolveOrCreateAppleScreenshotLocalizations,
@@ -13,11 +14,13 @@ import type { AppStoreConnectClient } from "../client.js";
 
 const {
   fetchAppleScreenshotSetsForLocalizationsMock,
+  fetchAppleScreenshotsForSetsMock,
   postAppStoreConnectJsonMock,
   requestAllAppStoreConnectPagesMock,
   resolveEditableAppleAppStoreVersionResourceMock,
 } = vi.hoisted(() => ({
   fetchAppleScreenshotSetsForLocalizationsMock: vi.fn(),
+  fetchAppleScreenshotsForSetsMock: vi.fn(),
   postAppStoreConnectJsonMock: vi.fn(),
   requestAllAppStoreConnectPagesMock: vi.fn(),
   resolveEditableAppleAppStoreVersionResourceMock: vi.fn(),
@@ -28,6 +31,7 @@ vi.mock("./pull.js", async () => {
 
   return {
     ...actual,
+    fetchAppleScreenshotsForSets: fetchAppleScreenshotsForSetsMock,
     fetchAppleScreenshotSetsForLocalizations:
       fetchAppleScreenshotSetsForLocalizationsMock,
   };
@@ -54,6 +58,7 @@ vi.mock("../metadata/push.js", async () => {
 });
 
 beforeEach(() => {
+  fetchAppleScreenshotsForSetsMock.mockReset();
   fetchAppleScreenshotSetsForLocalizationsMock.mockReset();
   postAppStoreConnectJsonMock.mockReset();
   requestAllAppStoreConnectPagesMock.mockReset();
@@ -408,5 +413,121 @@ describe("resolveOrCreateAppleScreenshotUploadTargets", () => {
     ).rejects.toThrow(
       /did not return an app screenshot set id for locale en-US and display type APP_IPHONE_65/,
     );
+  });
+});
+
+describe("clearAppleScreenshotUploadTargets", () => {
+  it("deletes existing Apple screenshots when replacement is enabled", async () => {
+    fetchAppleScreenshotsForSetsMock.mockResolvedValueOnce([
+      {
+        localizationId: "version-loc-en",
+        locale: "en-US",
+        screenshotSet: {
+          id: "set-en-65",
+          type: "appScreenshotSets",
+          attributes: {
+            screenshotDisplayType: "APP_IPHONE_65",
+          },
+        },
+        screenshots: [
+          {
+            id: "screenshot-en-1",
+            type: "appScreenshots",
+            attributes: {
+              fileName: "1.png",
+            },
+          },
+          {
+            id: "screenshot-en-2",
+            type: "appScreenshots",
+            attributes: {
+              fileName: "2.png",
+            },
+          },
+        ],
+      },
+    ]);
+
+    const requestMock = vi.fn().mockResolvedValue(undefined);
+    const client = {
+      request: requestMock,
+    } as unknown as AppStoreConnectClient;
+
+    await expect(
+      clearAppleScreenshotUploadTargets(
+        client,
+        [
+          {
+            platform: "apple",
+            locale: "en-US",
+            assetType: "APP_IPHONE_65",
+            files: [],
+            localizationId: "version-loc-en",
+            screenshotSetId: "set-en-65",
+          },
+        ],
+        {
+          clearExisting: true,
+        },
+      ),
+    ).resolves.toEqual([
+      {
+        locale: "en-US",
+        assetType: "APP_IPHONE_65",
+        screenshotSetId: "set-en-65",
+        deletedScreenshotIds: ["screenshot-en-1", "screenshot-en-2"],
+      },
+    ]);
+
+    expect(fetchAppleScreenshotsForSetsMock).toHaveBeenCalledWith(client, [
+      {
+        localizationId: "version-loc-en",
+        locale: "en-US",
+        screenshotSets: [
+          {
+            id: "set-en-65",
+            type: "appScreenshotSets",
+            attributes: {
+              screenshotDisplayType: "APP_IPHONE_65",
+            },
+          },
+        ],
+      },
+    ]);
+    expect(requestMock).toHaveBeenNthCalledWith(1, "/appScreenshots/screenshot-en-1", {
+      method: "DELETE",
+    });
+    expect(requestMock).toHaveBeenNthCalledWith(2, "/appScreenshots/screenshot-en-2", {
+      method: "DELETE",
+    });
+  });
+
+  it("skips Apple screenshot deletions when replacement is disabled", async () => {
+    const requestMock = vi.fn();
+    const client = {
+      request: requestMock,
+    } as unknown as AppStoreConnectClient;
+
+    await expect(
+      clearAppleScreenshotUploadTargets(
+        client,
+        [
+          {
+            platform: "apple",
+            locale: "en-US",
+            assetType: "APP_IPHONE_65",
+            files: [],
+            localizationId: "version-loc-en",
+            screenshotSetId: "set-en-65",
+          },
+        ],
+        {
+          clearExisting: false,
+        },
+      ),
+    ).resolves.toEqual([]);
+
+    expect(fetchAppleScreenshotsForSetsMock).not.toHaveBeenCalled();
+    expect(requestMock).not.toHaveBeenCalled();
   });
 });
