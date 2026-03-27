@@ -83,7 +83,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Implement YAML parsing for `.yaml`.
 - [x] Implement YAML parsing for `.md` file contents.
 - [x] Add deterministic serialization for pulled metadata files.
-- [ ] Preserve stable key ordering in written files.
+- [x] Preserve stable key ordering in written files.
 - [ ] Add platform-aware schema validation for Apple metadata documents.
 - [ ] Add platform-aware schema validation for Google metadata documents.
 
