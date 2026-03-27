@@ -1,3 +1,4 @@
+import { StoremetaError } from "../../cli/errors.js";
 import { GooglePlayClient } from "./client.js";
 
 export interface GoogleAppEdit {
@@ -46,4 +47,42 @@ export async function commitGoogleEdit(
       method: "POST",
     },
   );
+}
+
+export interface GoogleEditSessionResult<T> {
+  edit: GoogleAppEdit;
+  result: T;
+}
+
+export async function withGoogleEditSession<T>(
+  client: GooglePlayClient,
+  packageName: string,
+  run: (edit: GoogleAppEdit) => Promise<T>,
+  options?: {
+    autoCommit?: boolean;
+    changesNotSentForReview?: boolean;
+  },
+): Promise<GoogleEditSessionResult<T>> {
+  const edit = await createGoogleEdit(client, packageName);
+
+  try {
+    const result = await run(edit);
+
+    if (options?.autoCommit !== false) {
+      await commitGoogleEdit(client, packageName, edit.id, {
+        changesNotSentForReview: options?.changesNotSentForReview,
+      });
+    }
+
+    return {
+      edit,
+      result,
+    };
+  } catch (cause) {
+    throw new StoremetaError(
+      "API_ERROR",
+      `Google Play edit session ${edit.id} failed before commit`,
+      { cause },
+    );
+  }
 }

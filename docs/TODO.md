@@ -138,7 +138,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Implement a shared Google Play API client wrapper.
 - [x] Implement edit session creation.
 - [x] Implement edit session commit.
-- [ ] Implement safe edit session lifecycle handling for failures.
+- [x] Implement safe edit session lifecycle handling for failures.
 
 ## 14. Google Metadata Pull
 
