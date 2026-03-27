@@ -246,7 +246,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add unit tests for screenshot ordering and path resolution.
 - [x] Add unit tests for Apple metadata mapping.
 - [x] Add unit tests for Google metadata mapping.
-- [ ] Add tests for dry-run behavior.
+- [x] Add tests for dry-run behavior.
 - [ ] Add command-level smoke tests.
 - [ ] Add mocked API tests for Apple flows.
 - [ ] Add mocked API tests for Google flows.
