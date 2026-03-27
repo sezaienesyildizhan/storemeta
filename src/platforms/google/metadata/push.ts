@@ -12,6 +12,7 @@ import {
   validateGoogleMetadataDocument,
   validateGoogleMetadataLengthConstraints,
 } from "../../../validation/metadata/google.js";
+import type { GoogleStoreListingUpdate } from "./types.js";
 
 async function loadGoogleMetadataFile(
   filePath: string,
@@ -75,4 +76,24 @@ export async function loadGoogleMetadataDocuments(
   }
 
   return documents;
+}
+
+export function mapGoogleMetadataDocument(
+  document: GoogleMetadataDocument,
+): GoogleStoreListingUpdate {
+  return {
+    language: document.locale,
+    body: {
+      title: document.title,
+      shortDescription: document.short_description,
+      fullDescription: document.full_description,
+      video: document.video,
+    },
+  };
+}
+
+export function mapGoogleMetadataDocuments(
+  documents: GoogleMetadataDocument[],
+): GoogleStoreListingUpdate[] {
+  return documents.map(mapGoogleMetadataDocument);
 }
