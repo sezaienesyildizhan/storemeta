@@ -135,7 +135,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 ## 13. Google Platform Client
 
 - [x] Implement service account authentication.
-- [ ] Implement a shared Google Play API client wrapper.
+- [x] Implement a shared Google Play API client wrapper.
 - [ ] Implement edit session creation.
 - [ ] Implement edit session commit.
 - [ ] Implement safe edit session lifecycle handling for failures.
