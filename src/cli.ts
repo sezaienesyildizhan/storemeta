@@ -4,6 +4,7 @@ import { Command, Option } from "commander";
 
 import { runInitCommand } from "./cli/init.js";
 import { renderCommandError } from "./cli/render.js";
+import { runValidateCommand } from "./cli/validate.js";
 
 export interface GlobalOptions {
   config?: string;
@@ -36,6 +37,16 @@ export function buildCliProgram(): Command {
     .action(async () => {
       const options = program.opts<GlobalOptions>();
       await runInitCommand(options.config);
+    });
+
+  program
+    .command("validate")
+    .description("Validate the storemeta project configuration")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      await runValidateCommand({
+        config: options.config,
+      });
     });
 
   return program;

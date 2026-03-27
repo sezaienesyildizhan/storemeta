@@ -122,7 +122,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 12. `storemeta validate`
 
-- [ ] Validate root config structure.
+- [x] Validate root config structure.
 - [ ] Validate selected app and platform targets.
 - [ ] Validate credential presence.
 - [ ] Validate metadata files and schema.
