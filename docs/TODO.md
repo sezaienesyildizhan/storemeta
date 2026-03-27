@@ -55,7 +55,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Define screenshot descriptor types.
 - [x] Define locale mapping and grouping types.
 - [x] Define command result and summary types.
-- [ ] Define reusable error types.
+- [x] Define reusable error types.
 
 ## 5. Config System
 
