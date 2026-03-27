@@ -6,6 +6,7 @@ import { runInitCommand } from "./cli/init.js";
 import { runMetadataPullCommand } from "./cli/metadata-pull.js";
 import { runMetadataPushCommand } from "./cli/metadata-push.js";
 import { renderCommandError, renderCommandSummary } from "./cli/render.js";
+import { runScreenshotsPushCommand } from "./cli/screenshots-push.js";
 import { runValidateCommand } from "./cli/validate.js";
 
 export interface GlobalOptions {
@@ -35,6 +36,9 @@ export function buildCliProgram(): Command {
   const metadataCommand = program
     .command("metadata")
     .description("Metadata commands");
+  const screenshotsCommand = program
+    .command("screenshots")
+    .description("Screenshot commands");
 
   program
     .command("init")
@@ -76,6 +80,21 @@ export function buildCliProgram(): Command {
     .action(async () => {
       const options = program.opts<GlobalOptions>();
       const summary = await runMetadataPushCommand({
+        config: options.config,
+        app: options.app,
+        platform: options.platform,
+        locale: options.locale,
+        dryRun: options.dryRun,
+      });
+      console.log(renderCommandSummary(summary));
+    });
+
+  screenshotsCommand
+    .command("push")
+    .description("Push local screenshots to the store")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      const summary = await runScreenshotsPushCommand({
         config: options.config,
         app: options.app,
         platform: options.platform,

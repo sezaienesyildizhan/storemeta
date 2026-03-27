@@ -171,7 +171,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Map local screenshots to target locales and image types.
 - [x] Implement optional clearing of existing screenshots before upload.
 - [x] Upload screenshots through the Google edit session.
-- [ ] Support `--dry-run`.
+- [x] Support `--dry-run`.
 - [ ] Print per-locale and per-image-type progress.
 
 ## 18. Apple Platform Client
