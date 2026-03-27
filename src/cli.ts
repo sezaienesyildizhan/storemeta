@@ -3,6 +3,7 @@
 import { Command, Option } from "commander";
 
 import { runInitCommand } from "./cli/init.js";
+import { applyCommandSummaryExitCode } from "./cli/exit-code.js";
 import { runMetadataPullCommand } from "./cli/metadata-pull.js";
 import { runMetadataPushCommand } from "./cli/metadata-push.js";
 import { renderCommandError, renderCommandSummary } from "./cli/render.js";
@@ -59,6 +60,7 @@ export function buildCliProgram(): Command {
         platform: options.platform,
       });
       console.log(renderCommandSummary(summary));
+      applyCommandSummaryExitCode(summary);
     });
 
   metadataCommand
@@ -87,6 +89,7 @@ export function buildCliProgram(): Command {
         dryRun: options.dryRun,
       });
       console.log(renderCommandSummary(summary));
+      applyCommandSummaryExitCode(summary);
     });
 
   screenshotsCommand
@@ -102,6 +105,7 @@ export function buildCliProgram(): Command {
         dryRun: options.dryRun,
       });
       console.log(renderCommandSummary(summary));
+      applyCommandSummaryExitCode(summary);
     });
 
   return program;
