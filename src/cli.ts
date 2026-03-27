@@ -46,4 +46,5 @@ void runCli().catch((error: unknown) => {
       verbose: hasVerboseFlag(process.argv),
     }),
   );
+  process.exitCode = 1;
 });
