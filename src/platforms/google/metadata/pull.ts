@@ -15,3 +15,16 @@ export async function fetchGoogleListingForLocale(
     `/applications/${encodeURIComponent(packageName)}/edits/${encodeURIComponent(editId)}/listings/${encodeURIComponent(locale)}`,
   );
 }
+
+export async function fetchGoogleListingsForLocales(
+  client: GooglePlayClient,
+  packageName: string,
+  editId: string,
+  locales: string[],
+): Promise<GoogleStoreListingResource[]> {
+  return Promise.all(
+    locales.map((locale) =>
+      fetchGoogleListingForLocale(client, packageName, editId, locale),
+    ),
+  );
+}
