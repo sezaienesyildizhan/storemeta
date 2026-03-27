@@ -17,6 +17,21 @@ function renderCause(cause: unknown): string | undefined {
   return undefined;
 }
 
+function renderErrorLabel(error: StoremetaError): string {
+  switch (error.code) {
+    case "CONFIG_ERROR":
+      return "Config error";
+    case "AUTH_ERROR":
+      return "Auth error";
+    case "VALIDATION_ERROR":
+      return "Validation error";
+    case "API_ERROR":
+      return "API error";
+    case "FILESYSTEM_ERROR":
+      return "Filesystem error";
+  }
+}
+
 export function renderCommandSummary(summary: CommandSummary): string {
   const lines = [
     `Status: ${summary.status}`,
@@ -42,7 +57,7 @@ export function renderCommandError(
   options?: { verbose?: boolean },
 ): string {
   if (error instanceof StoremetaError) {
-    const lines = [`${error.code}: ${error.message}`];
+    const lines = [`${renderErrorLabel(error)}: ${error.message}`];
 
     if (options?.verbose) {
       const cause = renderCause(error.cause);

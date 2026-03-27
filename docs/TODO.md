@@ -226,7 +226,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 23. Shared Error Handling And UX
 
-- [ ] Define consistent error messages for config, auth, validation, API, and filesystem failures.
+- [x] Define consistent error messages for config, auth, validation, API, and filesystem failures.
 - [ ] Standardize command headers and summaries.
 - [ ] Ensure partial failures return non-zero exit codes.
 - [ ] Make destructive behavior explicit in command output.
