@@ -8,6 +8,7 @@ const {
   selectConfiguredAppMock,
   resolveSelectedPlatformsMock,
   loadAppleScreenshotSetsMock,
+  clearAppleScreenshotUploadTargetsMock,
   createAppStoreConnectClientMock,
   resolveOrCreateAppleScreenshotLocalizationsMock,
   resolveOrCreateAppleScreenshotUploadTargetsMock,
@@ -20,6 +21,7 @@ const {
   selectConfiguredAppMock: vi.fn(),
   resolveSelectedPlatformsMock: vi.fn(),
   loadAppleScreenshotSetsMock: vi.fn(),
+  clearAppleScreenshotUploadTargetsMock: vi.fn(),
   createAppStoreConnectClientMock: vi.fn(),
   resolveOrCreateAppleScreenshotLocalizationsMock: vi.fn(),
   resolveOrCreateAppleScreenshotUploadTargetsMock: vi.fn(),
@@ -49,6 +51,7 @@ vi.mock("../platforms/apple/client.js", () => ({
 }));
 
 vi.mock("../platforms/apple/screenshots/push.js", () => ({
+  clearAppleScreenshotUploadTargets: clearAppleScreenshotUploadTargetsMock,
   loadAppleScreenshotSets: loadAppleScreenshotSetsMock,
   resolveOrCreateAppleScreenshotLocalizations:
     resolveOrCreateAppleScreenshotLocalizationsMock,
@@ -65,6 +68,7 @@ beforeEach(() => {
   selectConfiguredAppMock.mockReset();
   resolveSelectedPlatformsMock.mockReset();
   loadAppleScreenshotSetsMock.mockReset();
+  clearAppleScreenshotUploadTargetsMock.mockReset();
   createAppStoreConnectClientMock.mockReset();
   resolveOrCreateAppleScreenshotLocalizationsMock.mockReset();
   resolveOrCreateAppleScreenshotUploadTargetsMock.mockReset();
@@ -130,6 +134,7 @@ describe("runScreenshotsPushCommand", () => {
         platform: "apple",
         locale: "en_us",
         dryRun: true,
+        replace: false,
       }),
     ).resolves.toEqual({
       status: "success",
@@ -231,6 +236,7 @@ describe("runScreenshotsPushCommand", () => {
         screenshotSetId: "set-en-65",
       },
     ]);
+    clearAppleScreenshotUploadTargetsMock.mockResolvedValueOnce([]);
     reserveAppleScreenshotUploadsMock.mockResolvedValueOnce([
       {
         locale: "en-US",
@@ -273,6 +279,7 @@ describe("runScreenshotsPushCommand", () => {
         app: "demo",
         platform: "apple",
         dryRun: false,
+        replace: true,
       }),
     ).resolves.toEqual({
       status: "success",
@@ -290,11 +297,40 @@ describe("runScreenshotsPushCommand", () => {
 
     expect(logSpy).toHaveBeenNthCalledWith(
       1,
-      "Uploading apple screenshots en-US/APP_IPHONE_65 (1 files)",
+      "Replacing apple screenshots en-US/APP_IPHONE_65 by deleting existing remote screenshots",
     );
     expect(logSpy).toHaveBeenNthCalledWith(
       2,
+      "Uploading apple screenshots en-US/APP_IPHONE_65 (1 files)",
+    );
+    expect(logSpy).toHaveBeenNthCalledWith(
+      3,
       "Uploaded apple screenshots en-US/APP_IPHONE_65 (1 files)",
+    );
+    expect(clearAppleScreenshotUploadTargetsMock).toHaveBeenCalledWith(
+      { id: "apple-client" },
+      [
+        {
+          platform: "apple",
+          locale: "en-US",
+          assetType: "APP_IPHONE_65",
+          files: [
+            {
+              platform: "apple",
+              locale: "en-US",
+              assetType: "APP_IPHONE_65",
+              filePath: "/tmp/screenshots/apple/en-US/APP_IPHONE_65/1.png",
+              fileName: "1.png",
+              position: 1,
+            },
+          ],
+          localizationId: "version-loc-en",
+          screenshotSetId: "set-en-65",
+        },
+      ],
+      {
+        clearExisting: true,
+      },
     );
     expect(reserveAppleScreenshotUploadsMock).toHaveBeenCalledWith(
       { id: "apple-client" },

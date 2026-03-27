@@ -229,7 +229,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Define consistent error messages for config, auth, validation, API, and filesystem failures.
 - [x] Standardize command headers and summaries.
 - [x] Ensure partial failures return non-zero exit codes.
-- [ ] Make destructive behavior explicit in command output.
+- [x] Make destructive behavior explicit in command output.
 
 ## 24. Fixtures And Sample Project
 

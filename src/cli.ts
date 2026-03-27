@@ -16,6 +16,7 @@ export interface GlobalOptions {
   platform?: "apple" | "google" | "all";
   locale?: string;
   dryRun: boolean;
+  replace: boolean;
   verbose: boolean;
 }
 
@@ -33,6 +34,10 @@ export function buildCliProgram(): Command {
     )
     .option("--locale <code>", "Target locale code")
     .option("--dry-run", "Preview changes without applying them")
+    .option(
+      "--replace",
+      "Delete existing remote screenshots before uploading new ones",
+    )
     .option("--verbose", "Enable verbose output");
   const metadataCommand = program
     .command("metadata")
@@ -103,6 +108,7 @@ export function buildCliProgram(): Command {
         platform: options.platform,
         locale: options.locale,
         dryRun: options.dryRun,
+        replace: options.replace,
       });
       console.log(renderCommandSummary(summary));
       applyCommandSummaryExitCode(summary);

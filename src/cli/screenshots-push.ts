@@ -10,6 +10,7 @@ import { resolveSelectedPlatforms } from "../config/select-platforms.js";
 import { normalizeLocaleCode } from "../locales/normalize.js";
 import { createAppStoreConnectClient } from "../platforms/apple/client.js";
 import {
+  clearAppleScreenshotUploadTargets,
   commitAppleScreenshotUploads,
   loadAppleScreenshotSets,
   reserveAppleScreenshotUploads,
@@ -20,6 +21,7 @@ import {
 import { createGooglePlayClient } from "../platforms/google/client.js";
 import { withGoogleEditSession } from "../platforms/google/edits.js";
 import {
+  clearGoogleScreenshotTargets,
   loadGoogleScreenshotSets,
   mapGoogleScreenshotSetsToTargets,
   uploadGoogleScreenshotTargets,
@@ -36,7 +38,10 @@ function createSuccessSummary(results: CommandItemResult[]): CommandSummary {
 }
 
 export async function runScreenshotsPushCommand(
-  options: Pick<GlobalOptions, "config" | "app" | "platform" | "locale" | "dryRun">,
+  options: Pick<
+    GlobalOptions,
+    "config" | "app" | "platform" | "locale" | "dryRun" | "replace"
+  >,
 ): Promise<CommandSummary> {
   const loadedConfig = await loadConfigFile(options.config);
   const config = validateRootConfig(loadedConfig.parsed);
@@ -98,6 +103,16 @@ export async function runScreenshotsPushCommand(
       );
 
       for (const uploadTarget of uploadTargets) {
+        if (options.replace) {
+          console.log(
+            `Replacing apple screenshots ${uploadTarget.locale}/${uploadTarget.assetType} by deleting existing remote screenshots`,
+          );
+
+          await clearAppleScreenshotUploadTargets(client, [uploadTarget], {
+            clearExisting: true,
+          });
+        }
+
         console.log(
           `Uploading apple screenshots ${uploadTarget.locale}/${uploadTarget.assetType} (${uploadTarget.files.length} files)`,
         );
@@ -153,6 +168,24 @@ export async function runScreenshotsPushCommand(
     const client = createGooglePlayClient(googleSettings.credentials);
 
     await withGoogleEditSession(client, googleSettings.packageName, async (edit) => {
+      if (options.replace) {
+        const clearResults = await clearGoogleScreenshotTargets(
+          client,
+          googleSettings.packageName,
+          edit.id,
+          uploadTargets,
+          {
+            clearExisting: true,
+          },
+        );
+
+        for (const clearResult of clearResults) {
+          console.log(
+            `Replacing google screenshots ${clearResult.targetLocale}/${clearResult.imageType} by deleting ${clearResult.deleted.length} existing screenshots`,
+          );
+        }
+      }
+
       await uploadGoogleScreenshotTargets(
         client,
         googleSettings.packageName,
