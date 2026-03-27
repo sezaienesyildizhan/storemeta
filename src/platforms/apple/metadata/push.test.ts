@@ -7,7 +7,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   loadAppleMetadataDocuments,
   resolveAppleAppInfoResource,
+  resolveEditableAppleAppStoreVersionResource,
   selectAppleAppInfoResource,
+  selectEditableAppleAppStoreVersion,
 } from "./push.js";
 import type { AppStoreConnectClient } from "../client.js";
 
@@ -137,5 +139,98 @@ describe("resolveAppleAppInfoResource", () => {
     await expect(
       resolveAppleAppInfoResource(client, "1234567890"),
     ).rejects.toThrow(/returned no app info resource/);
+  });
+});
+
+describe("selectEditableAppleAppStoreVersion", () => {
+  it("prefers the latest editable iOS app store version", () => {
+    expect(
+      selectEditableAppleAppStoreVersion([
+        {
+          id: "ready-for-sale-ios",
+          type: "appStoreVersions",
+          attributes: {
+            platform: "IOS",
+            appStoreState: "READY_FOR_SALE",
+            createdDate: "2024-01-01T00:00:00Z",
+          },
+        },
+        {
+          id: "editable-ios",
+          type: "appStoreVersions",
+          attributes: {
+            platform: "IOS",
+            appStoreState: "PREPARE_FOR_SUBMISSION",
+            createdDate: "2024-02-01T00:00:00Z",
+          },
+        },
+        {
+          id: "editable-mac",
+          type: "appStoreVersions",
+          attributes: {
+            platform: "MAC_OS",
+            appStoreState: "PREPARE_FOR_SUBMISSION",
+            createdDate: "2024-03-01T00:00:00Z",
+          },
+        },
+      ]),
+    )?.toMatchObject({
+      id: "editable-ios",
+    });
+  });
+});
+
+describe("resolveEditableAppleAppStoreVersionResource", () => {
+  it("loads the target editable app store version resource", async () => {
+    requestAllAppStoreConnectPagesMock.mockResolvedValueOnce([
+      {
+        id: "editable-ios",
+        type: "appStoreVersions",
+        attributes: {
+          platform: "IOS",
+          appStoreState: "PREPARE_FOR_SUBMISSION",
+          createdDate: "2024-02-01T00:00:00Z",
+        },
+      },
+    ]);
+
+    const client = {} as AppStoreConnectClient;
+
+    await expect(
+      resolveEditableAppleAppStoreVersionResource(client, "1234567890"),
+    ).resolves.toEqual({
+      id: "editable-ios",
+      type: "appStoreVersions",
+      attributes: {
+        platform: "IOS",
+        appStoreState: "PREPARE_FOR_SUBMISSION",
+        createdDate: "2024-02-01T00:00:00Z",
+      },
+    });
+
+    expect(requestAllAppStoreConnectPagesMock).toHaveBeenCalledWith(
+      client,
+      "/apps/1234567890/appStoreVersions",
+    );
+  });
+
+  it("fails when no editable app store version exists", async () => {
+    requestAllAppStoreConnectPagesMock.mockResolvedValueOnce([
+      {
+        id: "ready-for-sale-ios",
+        type: "appStoreVersions",
+        attributes: {
+          platform: "IOS",
+          appStoreState: "READY_FOR_SALE",
+          createdDate: "2024-01-01T00:00:00Z",
+        },
+      },
+    ]);
+
+    const client = {} as AppStoreConnectClient;
+
+    await expect(
+      resolveEditableAppleAppStoreVersionResource(client, "1234567890"),
+    ).rejects.toThrow(/returned no editable app store version/);
   });
 });
