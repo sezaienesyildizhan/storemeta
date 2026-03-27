@@ -101,7 +101,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Implement screenshot path resolution helpers.
 - [x] Implement deterministic screenshot filename ordering.
 - [x] Ensure directories are created safely as needed.
-- [ ] Prevent accidental writes outside configured base directories.
+- [x] Prevent accidental writes outside configured base directories.
 
 ## 10. CLI Shell
 
