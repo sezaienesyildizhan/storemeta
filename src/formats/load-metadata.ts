@@ -13,7 +13,7 @@ export interface LoadedMetadataFile {
 
 async function loadMetadataFileForExtension(
   filePath: string,
-  expectedExtension: ".yml" | ".yaml",
+  expectedExtension: ".yml" | ".yaml" | ".md",
 ): Promise<LoadedMetadataFile> {
   const resolvedPath = resolve(filePath);
 
@@ -65,4 +65,10 @@ export async function loadYamlMetadataFile(
   filePath: string,
 ): Promise<LoadedMetadataFile> {
   return loadMetadataFileForExtension(filePath, ".yaml");
+}
+
+export async function loadMarkdownMetadataFile(
+  filePath: string,
+): Promise<LoadedMetadataFile> {
+  return loadMetadataFileForExtension(filePath, ".md");
 }
