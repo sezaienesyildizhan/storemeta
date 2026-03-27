@@ -14,8 +14,10 @@ import type {
 import { listScreenshotGroups } from "../../../locales/groups.js";
 import { mapLocaleCode, mapLocaleCodes } from "../../../locales/map.js";
 import { normalizeLocaleCode } from "../../../locales/normalize.js";
+import { GooglePlayClient } from "../client.js";
 import {
   GOOGLE_SCREENSHOT_IMAGE_TYPES,
+  type GooglePlayImage,
   type GoogleScreenshotImageType,
 } from "./types.js";
 
@@ -169,6 +171,16 @@ export interface GoogleScreenshotUploadTarget extends ScreenshotSetDescriptor {
   imageType: GoogleScreenshotImageType;
 }
 
+export interface GoogleScreenshotClearResult {
+  targetLocale: string;
+  imageType: GoogleScreenshotImageType;
+  deleted: GooglePlayImage[];
+}
+
+interface GooglePlayDeleteImagesResponse {
+  deleted?: GooglePlayImage[];
+}
+
 export async function loadGoogleScreenshotSets(
   screenshotsBaseDir: string,
 ): Promise<ScreenshotSetDescriptor[]> {
@@ -295,5 +307,54 @@ export function mapGoogleScreenshotSetsToTargets(
     }
 
     return left.sourceLocale.localeCompare(right.sourceLocale);
+  });
+}
+
+export async function clearGoogleScreenshotTargets(
+  client: GooglePlayClient,
+  packageName: string,
+  editId: string,
+  uploadTargets: GoogleScreenshotUploadTarget[],
+  options?: {
+    clearExisting?: boolean;
+  },
+): Promise<GoogleScreenshotClearResult[]> {
+  if (options?.clearExisting !== true) {
+    return [];
+  }
+
+  const clearResults: GoogleScreenshotClearResult[] = [];
+  const clearedTargets = new Set<string>();
+
+  for (const uploadTarget of uploadTargets) {
+    const targetKey = `${uploadTarget.targetLocale}:${uploadTarget.imageType}`;
+
+    if (clearedTargets.has(targetKey)) {
+      continue;
+    }
+
+    const response = await client.requestJson<GooglePlayDeleteImagesResponse>(
+      `/applications/${encodeURIComponent(packageName)}/edits/${encodeURIComponent(editId)}/listings/${encodeURIComponent(uploadTarget.targetLocale)}/${encodeURIComponent(uploadTarget.imageType)}`,
+      {
+        method: "DELETE",
+      },
+    );
+
+    clearResults.push({
+      targetLocale: uploadTarget.targetLocale,
+      imageType: uploadTarget.imageType,
+      deleted: response.deleted ?? [],
+    });
+    clearedTargets.add(targetKey);
+  }
+
+  return clearResults.sort((left, right) => {
+    const localeOrder = left.targetLocale.localeCompare(right.targetLocale);
+
+    if (localeOrder !== 0) {
+      return localeOrder;
+    }
+
+    return left.imageType.localeCompare(right.imageType);
   });
 }

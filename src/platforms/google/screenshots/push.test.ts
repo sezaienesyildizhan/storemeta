@@ -2,12 +2,14 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
+  clearGoogleScreenshotTargets,
   loadGoogleScreenshotSets,
   mapGoogleScreenshotSetsToTargets,
 } from "./push.js";
+import type { GooglePlayClient } from "../client.js";
 
 describe("loadGoogleScreenshotSets", () => {
   it("loads normalized Google screenshot sets from the canonical directory layout", async () => {
@@ -200,5 +202,77 @@ describe("mapGoogleScreenshotSetsToTargets", () => {
         },
       ),
     ).toThrow(/defined by both en-US and en-GB/);
+  });
+});
+
+describe("clearGoogleScreenshotTargets", () => {
+  it("skips deletions when clearExisting is disabled", async () => {
+    const requestJson = vi.fn();
+    const client = { requestJson } as unknown as GooglePlayClient;
+
+    await expect(
+      clearGoogleScreenshotTargets(
+        client,
+        "com.example.app",
+        "edit-123",
+        [],
+        {
+          clearExisting: false,
+        },
+      ),
+    ).resolves.toEqual([]);
+    expect(requestJson).not.toHaveBeenCalled();
+  });
+
+  it("clears each target locale and image type once", async () => {
+    const requestJson = vi.fn().mockResolvedValue({
+      deleted: [{ id: "image-1" }],
+    });
+    const client = { requestJson } as unknown as GooglePlayClient;
+
+    await expect(
+      clearGoogleScreenshotTargets(
+        client,
+        "com.example.app",
+        "edit-123",
+        [
+          {
+            platform: "google",
+            locale: "en-US",
+            sourceLocale: "en-US",
+            targetLocale: "en-US",
+            assetType: "phoneScreenshots",
+            imageType: "phoneScreenshots",
+            files: [],
+          },
+          {
+            platform: "google",
+            locale: "en-US",
+            sourceLocale: "en-US",
+            targetLocale: "en-US",
+            assetType: "phoneScreenshots",
+            imageType: "phoneScreenshots",
+            files: [],
+          },
+        ],
+        {
+          clearExisting: true,
+        },
+      ),
+    ).resolves.toEqual([
+      {
+        targetLocale: "en-US",
+        imageType: "phoneScreenshots",
+        deleted: [{ id: "image-1" }],
+      },
+    ]);
+
+    expect(requestJson).toHaveBeenCalledTimes(1);
+    expect(requestJson).toHaveBeenCalledWith(
+      "/applications/com.example.app/edits/edit-123/listings/en-US/phoneScreenshots",
+      {
+        method: "DELETE",
+      },
+    );
   });
 });
