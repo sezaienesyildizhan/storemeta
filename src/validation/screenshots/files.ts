@@ -26,13 +26,18 @@ async function listDirectoryEntries(directoryPath: string) {
   }
 }
 
-export async function listScreenshotFiles(
+export interface ScreenshotFileGroup {
+  directory: string;
+  files: string[];
+}
+
+export async function listScreenshotFileGroups(
   configPath: string,
   app: ConfiguredApp,
   platforms: ConfiguredPlatform[],
-): Promise<string[]> {
+): Promise<ScreenshotFileGroup[]> {
   const projectRoot = dirname(resolve(configPath));
-  const files: string[] = [];
+  const groups: ScreenshotFileGroup[] = [];
 
   for (const platform of platforms) {
     const platformDir = resolve(projectRoot, app.settings.screenshots.baseDir, platform);
@@ -53,14 +58,31 @@ export async function listScreenshotFiles(
 
         const assetTypeDir = join(localeDir, assetTypeEntry.name);
         const fileEntries = await listDirectoryEntries(assetTypeDir);
+        const files = fileEntries
+          .filter((fileEntry) => fileEntry.isFile())
+          .map((fileEntry) => join(assetTypeDir, fileEntry.name))
+          .sort((left, right) => left.localeCompare(right));
 
-        for (const fileEntry of fileEntries) {
-          if (fileEntry.isFile()) {
-            files.push(join(assetTypeDir, fileEntry.name));
-          }
-        }
+        groups.push({
+          directory: assetTypeDir,
+          files,
+        });
       }
     }
+  }
+
+  return groups;
+}
+
+export async function listScreenshotFiles(
+  configPath: string,
+  app: ConfiguredApp,
+  platforms: ConfiguredPlatform[],
+): Promise<string[]> {
+  const files: string[] = [];
+
+  for (const group of await listScreenshotFileGroups(configPath, app, platforms)) {
+    files.push(...group.files);
   }
 
   return files.sort((left, right) => left.localeCompare(right));

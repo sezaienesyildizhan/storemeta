@@ -8,6 +8,7 @@ import { resolveSelectedPlatforms } from "../config/select-platforms.js";
 import { validateMetadataFiles } from "../validation/metadata/files.js";
 import { validateScreenshotFileExtensions } from "../validation/screenshots/extensions.js";
 import { validateScreenshotFolderStructure } from "../validation/screenshots/folders.js";
+import { validateScreenshotFileOrdering } from "../validation/screenshots/order.js";
 
 export async function runValidateCommand(
   options: Pick<GlobalOptions, "config" | "app" | "platform">,
@@ -30,4 +31,5 @@ export async function runValidateCommand(
   await validateMetadataFiles(loadedConfig.path, app, platforms);
   await validateScreenshotFolderStructure(loadedConfig.path, app, platforms);
   await validateScreenshotFileExtensions(loadedConfig.path, app, platforms);
+  await validateScreenshotFileOrdering(loadedConfig.path, app, platforms);
 }
