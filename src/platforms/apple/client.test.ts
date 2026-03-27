@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   createAppStoreConnectClient,
+  patchAppStoreConnectJson,
+  postAppStoreConnectJson,
   requestAllAppStoreConnectPages,
 } from "./client.js";
 
@@ -94,5 +96,69 @@ describe("requestAllAppStoreConnectPages", () => {
       requestAllAppStoreConnectPages(client, "/apps"),
     ).resolves.toEqual([{ id: "page-1" }]);
     expect(requestJson).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("postAppStoreConnectJson", () => {
+  it("sends JSON POST requests through the shared client", async () => {
+    const requestJson = vi.fn().mockResolvedValue({ data: { id: "created" } });
+    const client = { requestJson } as unknown as ReturnType<
+      typeof createAppStoreConnectClient
+    >;
+
+    await expect(
+      postAppStoreConnectJson(client, "/apps", {
+        data: {
+          type: "apps",
+        },
+      }),
+    ).resolves.toEqual({
+      data: { id: "created" },
+    });
+
+    expect(requestJson).toHaveBeenCalledWith("/apps", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        data: {
+          type: "apps",
+        },
+      }),
+    });
+  });
+});
+
+describe("patchAppStoreConnectJson", () => {
+  it("sends JSON PATCH requests through the shared client", async () => {
+    const requestJson = vi.fn().mockResolvedValue({ data: { id: "patched" } });
+    const client = { requestJson } as unknown as ReturnType<
+      typeof createAppStoreConnectClient
+    >;
+
+    await expect(
+      patchAppStoreConnectJson(client, "/apps/app-1", {
+        data: {
+          id: "app-1",
+          type: "apps",
+        },
+      }),
+    ).resolves.toEqual({
+      data: { id: "patched" },
+    });
+
+    expect(requestJson).toHaveBeenCalledWith("/apps/app-1", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        data: {
+          id: "app-1",
+          type: "apps",
+        },
+      }),
+    });
   });
 });

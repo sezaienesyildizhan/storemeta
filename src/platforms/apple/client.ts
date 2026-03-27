@@ -83,6 +83,34 @@ export function createAppStoreConnectClient(
   return new AppStoreConnectClient(credentials, env);
 }
 
+export async function postAppStoreConnectJson<TResponse>(
+  client: AppStoreConnectClient,
+  path: string,
+  body: unknown,
+): Promise<TResponse> {
+  return client.requestJson<TResponse>(path, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function patchAppStoreConnectJson<TResponse>(
+  client: AppStoreConnectClient,
+  path: string,
+  body: unknown,
+): Promise<TResponse> {
+  return client.requestJson<TResponse>(path, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 export async function requestAllAppStoreConnectPages<T>(
   client: AppStoreConnectClient,
   path: string,

@@ -179,7 +179,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Implement JWT generation from Apple credentials.
 - [x] Implement a shared App Store Connect API client.
 - [x] Implement paginated GET helpers where needed.
-- [ ] Implement safe POST and PATCH wrappers.
+- [x] Implement safe POST and PATCH wrappers.
 - [ ] Ensure auth and API errors are rendered clearly without leaking secrets.
 
 ## 19. Apple Metadata Pull
