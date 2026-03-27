@@ -5,7 +5,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 ## 0. Security And Repo Hygiene
 
 - [ ] Rotate any previously used Apple and Google credentials before anything public is pushed.
-- [ ] Ensure `reference/` stays ignored and is never added to Git history.
+- [x] Ensure `reference/` stays ignored and is never added to Git history.
 - [ ] Add any additional local-only secret paths to `.gitignore` if needed.
 - [ ] Confirm the repo contains no machine-specific paths or private metadata.
 
