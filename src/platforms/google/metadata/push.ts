@@ -12,6 +12,7 @@ import {
   validateGoogleMetadataDocument,
   validateGoogleMetadataLengthConstraints,
 } from "../../../validation/metadata/google.js";
+import { GooglePlayClient } from "../client.js";
 import type { GoogleStoreListingUpdate } from "./types.js";
 
 async function loadGoogleMetadataFile(
@@ -96,4 +97,36 @@ export function mapGoogleMetadataDocuments(
   documents: GoogleMetadataDocument[],
 ): GoogleStoreListingUpdate[] {
   return documents.map(mapGoogleMetadataDocument);
+}
+
+export async function uploadGoogleListing(
+  client: GooglePlayClient,
+  packageName: string,
+  editId: string,
+  update: GoogleStoreListingUpdate,
+): Promise<void> {
+  await client.request(
+    `/applications/${encodeURIComponent(packageName)}/edits/${encodeURIComponent(editId)}/listings/${encodeURIComponent(update.language)}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        language: update.language,
+        ...update.body,
+      }),
+    },
+  );
+}
+
+export async function uploadGoogleListings(
+  client: GooglePlayClient,
+  packageName: string,
+  editId: string,
+  updates: GoogleStoreListingUpdate[],
+): Promise<void> {
+  for (const update of updates) {
+    await uploadGoogleListing(client, packageName, editId, update);
+  }
 }
