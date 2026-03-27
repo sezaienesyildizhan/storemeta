@@ -147,7 +147,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Normalize remote listing data into the local metadata schema.
 - [x] Write one file per locale.
 - [x] Support `--locale`.
-- [ ] Support `--platform google`.
+- [x] Support `--platform google`.
 
 ## 15. Google Metadata Push
 

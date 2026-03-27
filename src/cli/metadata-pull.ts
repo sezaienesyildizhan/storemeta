@@ -25,9 +25,24 @@ function resolveGooglePullLocales(
   return (defaults ?? []).map(normalizeLocaleCode);
 }
 
+function validateMetadataPullPlatform(
+  platform: GlobalOptions["platform"],
+): void {
+  if (platform === undefined || platform === "google") {
+    return;
+  }
+
+  throw new StoremetaError(
+    "CONFIG_ERROR",
+    'The current "metadata pull" command only supports --platform google',
+  );
+}
+
 export async function runMetadataPullCommand(
-  options: Pick<GlobalOptions, "config" | "app" | "locale">,
+  options: Pick<GlobalOptions, "config" | "app" | "locale" | "platform">,
 ): Promise<void> {
+  validateMetadataPullPlatform(options.platform);
+
   const loadedConfig = await loadConfigFile(options.config);
   const config = validateRootConfig(loadedConfig.parsed);
   const app = selectConfiguredApp(config, options.app);

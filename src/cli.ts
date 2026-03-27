@@ -64,6 +64,7 @@ export function buildCliProgram(): Command {
         config: options.config,
         app: options.app,
         locale: options.locale,
+        platform: options.platform,
       });
     });
 
