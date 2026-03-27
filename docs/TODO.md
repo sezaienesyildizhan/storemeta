@@ -97,7 +97,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 9. Deterministic File Writers
 
-- [ ] Implement metadata file writing helpers.
+- [x] Implement metadata file writing helpers.
 - [ ] Implement screenshot path resolution helpers.
 - [ ] Implement deterministic screenshot filename ordering.
 - [ ] Ensure directories are created safely as needed.
