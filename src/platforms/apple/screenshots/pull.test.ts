@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  filterAppleScreenshotLocalizationsByLocale,
   downloadAppleScreenshot,
   downloadAppleScreenshotSet,
   fetchAppleScreenshotLocalizations,
@@ -75,6 +76,40 @@ describe("fetchAppleScreenshotLocalizations", () => {
       client,
       "1234567890",
     );
+  });
+});
+
+describe("filterAppleScreenshotLocalizationsByLocale", () => {
+  it("filters Apple screenshot localizations by normalized locale", () => {
+    expect(
+      filterAppleScreenshotLocalizationsByLocale(
+        [
+          {
+            id: "version-loc-en",
+            type: "appStoreVersionLocalizations",
+            attributes: {
+              locale: "en-US",
+            },
+          },
+          {
+            id: "version-loc-tr",
+            type: "appStoreVersionLocalizations",
+            attributes: {
+              locale: "tr",
+            },
+          },
+        ],
+        "en_us",
+      ),
+    ).toEqual([
+      {
+        id: "version-loc-en",
+        type: "appStoreVersionLocalizations",
+        attributes: {
+          locale: "en-US",
+        },
+      },
+    ]);
   });
 });
 

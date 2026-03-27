@@ -1,3 +1,4 @@
+import { normalizeLocaleCode } from "../../../locales/normalize.js";
 import { writeFile } from "node:fs/promises";
 import { extname } from "node:path";
 
@@ -6,7 +7,6 @@ import type {
   ScreenshotDescriptor,
   ScreenshotSetDescriptor,
 } from "../../../formats/screenshot-types.js";
-import { normalizeLocaleCode } from "../../../locales/normalize.js";
 import { ensureParentDirectory } from "../../../writers/ensure-directory.js";
 import { orderScreenshotsForWrite } from "../../../writers/order-screenshots.js";
 import { resolveScreenshotFilePath } from "../../../writers/resolve-screenshot-path.js";
@@ -22,6 +22,23 @@ export async function fetchAppleScreenshotLocalizations(
   appId: string,
 ): Promise<AppleAppStoreVersionLocalizationData[]> {
   return fetchAppleAppStoreVersionLocalizations(client, appId);
+}
+
+export function filterAppleScreenshotLocalizationsByLocale(
+  localizations: AppleAppStoreVersionLocalizationData[],
+  locale: string | undefined,
+): AppleAppStoreVersionLocalizationData[] {
+  if (locale === undefined) {
+    return localizations;
+  }
+
+  const normalizedLocale = normalizeLocaleCode(locale);
+
+  return localizations.filter(
+    (localization) =>
+      normalizeLocaleCode(localization.attributes.locale ?? "") ===
+      normalizedLocale,
+  );
 }
 
 export interface AppleScreenshotSetAttributes {
