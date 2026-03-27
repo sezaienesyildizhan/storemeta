@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createMissingAppleAppInfoLocalizations,
   loadAppleMetadataDocuments,
+  updateExistingAppleAppStoreVersionLocalizations,
   updateExistingAppleAppInfoLocalizations,
   resolveAppleAppInfoResource,
   resolveEditableAppleAppStoreVersionResource,
@@ -369,6 +370,70 @@ describe("createMissingAppleAppInfoLocalizations", () => {
                 id: "app-info-1",
               },
             },
+          },
+        },
+      },
+    );
+  });
+});
+
+describe("updateExistingAppleAppStoreVersionLocalizations", () => {
+  it("patches only Apple app store version localizations that already exist", async () => {
+    requestAllAppStoreConnectPagesMock.mockResolvedValueOnce([
+      {
+        id: "version-loc-en",
+        type: "appStoreVersionLocalizations",
+        attributes: {
+          locale: "en-US",
+        },
+      },
+    ]);
+    patchAppStoreConnectJsonMock.mockResolvedValue({});
+
+    const client = {} as AppStoreConnectClient;
+
+    await expect(
+      updateExistingAppleAppStoreVersionLocalizations(client, "version-1", [
+        {
+          locale: "en-US",
+          description: "Description",
+          keywords: "one,two",
+          marketing_url: "https://example.com",
+          promotional_text: "Promo",
+          support_url: "https://example.com/support",
+          whats_new: "Bug fixes",
+        },
+        {
+          locale: "tr",
+          description: "Aciklama",
+        },
+      ]),
+    ).resolves.toEqual([
+      {
+        locale: "en-US",
+        localizationId: "version-loc-en",
+      },
+    ]);
+
+    expect(requestAllAppStoreConnectPagesMock).toHaveBeenCalledWith(
+      client,
+      "/appStoreVersions/version-1/appStoreVersionLocalizations",
+    );
+    expect(patchAppStoreConnectJsonMock).toHaveBeenCalledWith(
+      client,
+      "/appStoreVersionLocalizations/version-loc-en",
+      {
+        data: {
+          id: "version-loc-en",
+          type: "appStoreVersionLocalizations",
+          attributes: {
+            locale: "en-US",
+            description: "Description",
+            keywords: "one,two",
+            marketingUrl: "https://example.com",
+            promotionalText: "Promo",
+            supportUrl: "https://example.com/support",
+            whatsNew: "Bug fixes",
           },
         },
       },
