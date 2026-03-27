@@ -206,7 +206,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 ## 21. Apple Screenshots Pull
 
 - [x] Fetch localization resources for the target version.
-- [ ] Fetch screenshot sets per localization.
+- [x] Fetch screenshot sets per localization.
 - [ ] Fetch screenshots within each set.
 - [ ] Download screenshot binaries into the canonical local directory layout.
 - [ ] Preserve deterministic ordering.
