@@ -1,3 +1,14 @@
+import { writeFile } from "node:fs/promises";
+import { extname } from "node:path";
+
+import { StoremetaError } from "../../../cli/errors.js";
+import type {
+  ScreenshotDescriptor,
+  ScreenshotSetDescriptor,
+} from "../../../formats/screenshot-types.js";
+import { normalizeLocaleCode } from "../../../locales/normalize.js";
+import { ensureParentDirectory } from "../../../writers/ensure-directory.js";
+import { resolveScreenshotFilePath } from "../../../writers/resolve-screenshot-path.js";
 import type { AppStoreConnectClient } from "../client.js";
 import { requestAllAppStoreConnectPages } from "../client.js";
 import {
@@ -30,6 +41,12 @@ export interface AppleLocalizationScreenshotSets {
 
 export interface AppleScreenshotAttributes {
   fileName?: string;
+  imageAsset?: {
+    templateUrl?: string;
+    url?: string;
+    width?: number;
+    height?: number;
+  };
   assetDeliveryState?: {
     state?: string;
   };
@@ -112,4 +129,167 @@ export async function fetchAppleScreenshotsForSets(
 
     return left.screenshotSet.id.localeCompare(right.screenshotSet.id);
   });
+}
+
+function resolveAppleScreenshotExtension(
+  screenshot: AppleScreenshotData,
+  contentType?: string | null,
+): string {
+  if (contentType?.includes("png")) {
+    return ".png";
+  }
+
+  if (contentType?.includes("jpeg") || contentType?.includes("jpg")) {
+    return ".jpg";
+  }
+
+  const fileNameExtension = extname(screenshot.attributes?.fileName ?? "").toLowerCase();
+
+  if (fileNameExtension.length > 0) {
+    return fileNameExtension;
+  }
+
+  return ".png";
+}
+
+function replaceAppleImageAssetTemplateValue(
+  templateUrl: string,
+  token: string,
+  value: string | number | undefined,
+): string {
+  if (!templateUrl.includes(token)) {
+    return templateUrl;
+  }
+
+  if (value === undefined) {
+    throw new StoremetaError(
+      "API_ERROR",
+      `Apple screenshot image asset is missing ${token} data for template expansion`,
+    );
+  }
+
+  return templateUrl.replaceAll(token, String(value));
+}
+
+function resolveAppleScreenshotDownloadUrl(screenshot: AppleScreenshotData): string {
+  const imageAsset = screenshot.attributes?.imageAsset;
+
+  if (imageAsset?.url !== undefined && imageAsset.url.trim().length > 0) {
+    return imageAsset.url;
+  }
+
+  if (
+    imageAsset?.templateUrl !== undefined &&
+    imageAsset.templateUrl.trim().length > 0
+  ) {
+    const extension = resolveAppleScreenshotExtension(screenshot).replace(/^\./u, "");
+    let downloadUrl = imageAsset.templateUrl;
+
+    downloadUrl = replaceAppleImageAssetTemplateValue(
+      downloadUrl,
+      "{w}",
+      imageAsset.width,
+    );
+    downloadUrl = replaceAppleImageAssetTemplateValue(
+      downloadUrl,
+      "{h}",
+      imageAsset.height,
+    );
+    downloadUrl = replaceAppleImageAssetTemplateValue(downloadUrl, "{f}", extension);
+
+    return downloadUrl;
+  }
+
+  throw new StoremetaError(
+    "API_ERROR",
+    `Apple screenshot ${screenshot.id} does not include a downloadable image asset`,
+  );
+}
+
+export async function downloadAppleScreenshot(
+  screenshot: AppleScreenshotData,
+): Promise<{ buffer: Uint8Array; extension: string }> {
+  const response = await fetch(resolveAppleScreenshotDownloadUrl(screenshot));
+
+  if (!response.ok) {
+    throw new StoremetaError(
+      "API_ERROR",
+      `Failed to download Apple screenshot ${screenshot.id} with ${response.status} ${response.statusText}`,
+    );
+  }
+
+  return {
+    buffer: new Uint8Array(await response.arrayBuffer()),
+    extension: resolveAppleScreenshotExtension(
+      screenshot,
+      response.headers.get("content-type"),
+    ),
+  };
+}
+
+function resolveAppleScreenshotFileName(
+  screenshot: AppleScreenshotData,
+  extension: string,
+): string {
+  const sourceFileName = screenshot.attributes?.fileName;
+
+  if (sourceFileName !== undefined && sourceFileName.trim().length > 0) {
+    return sourceFileName;
+  }
+
+  return `${screenshot.id}${extension}`;
+}
+
+export async function downloadAppleScreenshotSet(
+  screenshotsBaseDir: string,
+  screenshotSet: AppleScreenshotSetWithScreenshots,
+): Promise<ScreenshotSetDescriptor> {
+  const locale = normalizeLocaleCode(screenshotSet.locale ?? "en-US");
+  const assetType =
+    screenshotSet.screenshotSet.attributes?.screenshotDisplayType ??
+    screenshotSet.screenshotSet.id;
+  const files: ScreenshotDescriptor[] = [];
+
+  for (const [index, screenshot] of screenshotSet.screenshots.entries()) {
+    const position = index + 1;
+    const downloadedScreenshot = await downloadAppleScreenshot(screenshot);
+    const fileName = resolveAppleScreenshotFileName(
+      screenshot,
+      downloadedScreenshot.extension,
+    );
+    const filePath = resolveScreenshotFilePath(screenshotsBaseDir, {
+      platform: "apple",
+      locale,
+      assetType,
+      fileName,
+    });
+
+    await ensureParentDirectory(filePath);
+
+    try {
+      await writeFile(filePath, downloadedScreenshot.buffer);
+    } catch (cause) {
+      throw new StoremetaError(
+        "FILESYSTEM_ERROR",
+        `Failed to write Apple screenshot ${locale}/${assetType}/${fileName}`,
+        { cause },
+      );
+    }
+
+    files.push({
+      platform: "apple",
+      locale,
+      assetType,
+      filePath,
+      fileName,
+      position,
+    });
+  }
+
+  return {
+    platform: "apple",
+    locale,
+    assetType,
+    files,
+  };
 }

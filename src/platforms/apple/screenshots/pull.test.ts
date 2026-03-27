@@ -1,6 +1,12 @@
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  downloadAppleScreenshot,
+  downloadAppleScreenshotSet,
   fetchAppleScreenshotLocalizations,
   fetchAppleScreenshotsForSets,
   fetchAppleScreenshotSetsForLocalizations,
@@ -261,5 +267,123 @@ describe("fetchAppleScreenshotsForSets", () => {
       client,
       "/appScreenshotSets/set-en/appScreenshots",
     );
+  });
+});
+
+describe("downloadAppleScreenshot", () => {
+  it("downloads Apple screenshot binaries from an image asset template URL", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new TextEncoder().encode("apple-image").buffer,
+      headers: new Headers({
+        "content-type": "image/png",
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      await expect(
+        downloadAppleScreenshot({
+          id: "screenshot-1",
+          type: "appScreenshots",
+          attributes: {
+            fileName: "source.png",
+            imageAsset: {
+              templateUrl: "https://example.com/{w}x{h}.{f}",
+              width: 1290,
+              height: 2796,
+            },
+          },
+        }),
+      ).resolves.toEqual({
+        buffer: new Uint8Array(new TextEncoder().encode("apple-image")),
+        extension: ".png",
+      });
+
+      expect(fetchMock).toHaveBeenCalledWith("https://example.com/1290x2796.png");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("downloadAppleScreenshotSet", () => {
+  it("writes Apple screenshots into the canonical local directory layout", async () => {
+    const screenshotsBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => new TextEncoder().encode("apple-image").buffer,
+        headers: new Headers({
+          "content-type": "image/png",
+        }),
+      }),
+    );
+
+    try {
+      const result = await downloadAppleScreenshotSet(screenshotsBaseDir, {
+        localizationId: "version-loc-en",
+        locale: "en-US",
+        screenshotSet: {
+          id: "set-en",
+          type: "appScreenshotSets",
+          attributes: {
+            screenshotDisplayType: "APP_IPHONE_65",
+          },
+        },
+        screenshots: [
+          {
+            id: "screenshot-en-1",
+            type: "appScreenshots",
+            attributes: {
+              fileName: "hero.png",
+              imageAsset: {
+                url: "https://example.com/hero.png",
+              },
+            },
+          },
+        ],
+      });
+
+      expect(result).toEqual({
+        platform: "apple",
+        locale: "en-US",
+        assetType: "APP_IPHONE_65",
+        files: [
+          {
+            platform: "apple",
+            locale: "en-US",
+            assetType: "APP_IPHONE_65",
+            filePath: join(
+              screenshotsBaseDir,
+              "apple",
+              "en-US",
+              "APP_IPHONE_65",
+              "hero.png",
+            ),
+            fileName: "hero.png",
+            position: 1,
+          },
+        ],
+      });
+      await expect(
+        readFile(
+          join(
+            screenshotsBaseDir,
+            "apple",
+            "en-US",
+            "APP_IPHONE_65",
+            "hero.png",
+          ),
+          "utf8",
+        ),
+      ).resolves.toBe("apple-image");
+    } finally {
+      vi.unstubAllGlobals();
+      await rm(screenshotsBaseDir, { recursive: true, force: true });
+    }
   });
 });
