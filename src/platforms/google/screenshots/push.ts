@@ -435,23 +435,40 @@ export async function uploadGoogleScreenshotTargets(
   editId: string,
   uploadTargets: GoogleScreenshotUploadTarget[],
   options?: {
+    onTargetStarted?: (
+      target: GoogleScreenshotUploadTarget,
+    ) => void | Promise<void>;
+    onTargetCompleted?: (
+      target: GoogleScreenshotUploadTarget,
+      results: GoogleScreenshotUploadResult[],
+    ) => void | Promise<void>;
     onUploaded?: (result: GoogleScreenshotUploadResult) => void | Promise<void>;
   },
 ): Promise<GoogleScreenshotUploadResult[]> {
   const uploadResults: GoogleScreenshotUploadResult[] = [];
 
   for (const uploadTarget of uploadTargets) {
-    for (const result of await uploadGoogleScreenshotTarget(
+    if (options?.onTargetStarted !== undefined) {
+      await options.onTargetStarted(uploadTarget);
+    }
+
+    const targetResults = await uploadGoogleScreenshotTarget(
       client,
       packageName,
       editId,
       uploadTarget,
-    )) {
+    );
+
+    for (const result of targetResults) {
       uploadResults.push(result);
 
       if (options?.onUploaded !== undefined) {
         await options.onUploaded(result);
       }
+    }
+
+    if (options?.onTargetCompleted !== undefined) {
+      await options.onTargetCompleted(uploadTarget, targetResults);
     }
   }
 

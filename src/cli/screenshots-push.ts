@@ -66,6 +66,12 @@ export async function runScreenshotsPushCommand(
   }));
 
   if (options.dryRun) {
+    for (const target of uploadTargets) {
+      console.log(
+        `DRY RUN google screenshots ${target.targetLocale}/${target.imageType} (${target.files.length} files)`,
+      );
+    }
+
     return {
       status: "success",
       successCount: results.length,
@@ -83,6 +89,18 @@ export async function runScreenshotsPushCommand(
       googleSettings.packageName,
       edit.id,
       uploadTargets,
+      {
+        onTargetStarted: (target) => {
+          console.log(
+            `Uploading google screenshots ${target.targetLocale}/${target.imageType} (${target.files.length} files)`,
+          );
+        },
+        onTargetCompleted: (target, targetResults) => {
+          console.log(
+            `Uploaded google screenshots ${target.targetLocale}/${target.imageType} (${targetResults.length} files)`,
+          );
+        },
+      },
     );
   });
 

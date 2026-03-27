@@ -172,7 +172,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Implement optional clearing of existing screenshots before upload.
 - [x] Upload screenshots through the Google edit session.
 - [x] Support `--dry-run`.
-- [ ] Print per-locale and per-image-type progress.
+- [x] Print per-locale and per-image-type progress.
 
 ## 18. Apple Platform Client
 
