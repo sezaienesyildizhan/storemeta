@@ -143,6 +143,7 @@ Recommended internal modules:
 
 Initial tooling choices:
 - CLI parser: `commander`
+- HTTP client: native `fetch` from Node.js 20+
 
 High-level design:
 - one unified CLI surface
