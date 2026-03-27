@@ -1,0 +1,29 @@
+version: 1
+project:
+  name: Storemeta Example
+  defaultApp: example-app
+apps:
+  example-app:
+    metadata:
+      baseDir: metadata
+      format: yaml
+    screenshots:
+      baseDir: screenshots
+    apple:
+      appId: "1234567890"
+      credentials:
+        issuerIdEnv: APPLE_ISSUER_ID
+        keyIdEnv: APPLE_KEY_ID
+        privateKeyPathEnv: APPLE_PRIVATE_KEY_PATH
+      locales:
+        default:
+          - en-US
+          - tr
+    google:
+      packageName: com.example.storemeta
+      credentials:
+        serviceAccountPathEnv: GOOGLE_SERVICE_ACCOUNT_PATH
+      locales:
+        default:
+          - en-US
+          - tr

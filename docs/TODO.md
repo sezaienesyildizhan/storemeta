@@ -233,7 +233,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 24. Fixtures And Sample Project
 
-- [ ] Add a fake example `storemeta.yml`.
+- [x] Add a fake example `storemeta.yml`.
 - [ ] Add fake sample metadata files for Apple and Google.
 - [ ] Add fake sample screenshot directories.
 - [ ] Ensure all examples are safe to publish.
