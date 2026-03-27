@@ -67,7 +67,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Implement app selection logic via `project.defaultApp` and `--app`.
 - [x] Validate required platform identifiers.
 - [x] Validate configured credential env var names.
-- [ ] Validate base directory paths.
+- [x] Validate base directory paths.
 
 ## 6. Credential Loading
 
