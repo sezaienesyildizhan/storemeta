@@ -27,7 +27,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add TypeScript runtime and build dependencies.
 - [x] Add a YAML parser.
 - [x] Add an HTTP client strategy.
-- [ ] Add a schema validation library for config and metadata validation.
+- [x] Add a schema validation library for config and metadata validation.
 - [ ] Add test tooling.
 - [ ] Add linting and formatting tooling if desired.
 
