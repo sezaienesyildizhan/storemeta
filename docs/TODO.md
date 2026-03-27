@@ -43,7 +43,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Create `src/auth/google/`.
 - [x] Create `src/platforms/apple/metadata/`.
 - [x] Create `src/platforms/apple/screenshots/`.
-- [ ] Create `src/platforms/google/metadata/`.
+- [x] Create `src/platforms/google/metadata/`.
 - [ ] Create `src/platforms/google/screenshots/`.
 
 ## 4. Core Domain Types
