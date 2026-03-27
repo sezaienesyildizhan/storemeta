@@ -201,7 +201,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Update existing app store version localizations.
 - [x] Create missing app store version localizations when allowed.
 - [x] Support `--dry-run`.
-- [ ] Print per-locale progress and final results.
+- [x] Print per-locale progress and final results.
 
 ## 21. Apple Screenshots Pull
 

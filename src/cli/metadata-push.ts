@@ -89,7 +89,15 @@ export async function runMetadataPushCommand(
       );
 
       if (options.dryRun) {
+        for (const document of documents) {
+          console.log(`DRY RUN apple metadata ${document.locale}`);
+        }
+
         continue;
+      }
+
+      for (const document of documents) {
+        console.log(`Syncing apple metadata ${document.locale}`);
       }
 
       const client = createAppStoreConnectClient(appleSettings.credentials);
@@ -111,6 +119,10 @@ export async function runMetadataPushCommand(
         editableVersion.id,
         documents,
       );
+
+      for (const document of documents) {
+        console.log(`Synced apple metadata ${document.locale}`);
+      }
       continue;
     }
 
@@ -155,6 +167,11 @@ export async function runMetadataPushCommand(
         googleSettings.packageName,
         edit.id,
         updates,
+        {
+          onUploaded: (update) => {
+            console.log(`Uploaded google metadata ${update.language}`);
+          },
+        },
       );
     });
   }
