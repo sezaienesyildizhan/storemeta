@@ -116,7 +116,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 - [x] Implement starter config generation for `storemeta.yml`.
 - [x] Generate example metadata directories.
-- [ ] Generate example screenshot directories.
+- [x] Generate example screenshot directories.
 - [ ] Avoid overwriting existing files by default.
 - [ ] Use fake values only in generated examples.
 

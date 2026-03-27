@@ -43,6 +43,14 @@ export async function runInitCommand(configPath?: string): Promise<string> {
   await writeFile(resolvedPath, renderStarterConfig(), "utf8");
   await mkdir(join(projectRoot, "metadata", "apple"), { recursive: true });
   await mkdir(join(projectRoot, "metadata", "google"), { recursive: true });
+  await mkdir(
+    join(projectRoot, "screenshots", "apple", "en-US", "APP_IPHONE_65"),
+    { recursive: true },
+  );
+  await mkdir(
+    join(projectRoot, "screenshots", "google", "en-US", "phoneScreenshots"),
+    { recursive: true },
+  );
 
   return resolvedPath;
 }
