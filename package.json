@@ -1,6 +1,37 @@
 {
   "name": "storemeta",
+  "version": "0.0.0",
+  "description": "CLI for pulling, validating, and pushing App Store Connect and Google Play metadata and screenshots.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "bin": {
     "storemeta": "./dist/cli.js"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc --noEmit -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sezaienesyildizhan/storemeta.git"
+  },
+  "homepage": "https://github.com/sezaienesyildizhan/storemeta#readme",
+  "bugs": {
+    "url": "https://github.com/sezaienesyildizhan/storemeta/issues"
+  },
+  "keywords": [
+    "cli",
+    "app-store-connect",
+    "google-play",
+    "metadata",
+    "screenshots"
+  ]
 }
