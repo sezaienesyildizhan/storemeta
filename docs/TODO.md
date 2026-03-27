@@ -18,7 +18,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Create `tsconfig.json`.
 - [x] Create the initial source tree under `src/`.
 - [x] Add a build output target such as `dist/`.
-- [ ] Add a minimal `.npmignore` or rely on `package.json` `files`.
+- [x] Add a minimal `.npmignore` or rely on `package.json` `files`.
 - [ ] Add a basic `CONTRIBUTING.md`.
 
 ## 2. Tooling And Dependency Setup
