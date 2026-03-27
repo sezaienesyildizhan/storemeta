@@ -63,7 +63,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Support `--config <path>`.
 - [x] Implement schema validation for the root config.
 - [x] Support single-app usage cleanly.
-- [ ] Support multi-app config structure even if only one app is used initially.
+- [x] Support multi-app config structure even if only one app is used initially.
 - [ ] Implement app selection logic via `project.defaultApp` and `--app`.
 - [ ] Validate required platform identifiers.
 - [ ] Validate configured credential env var names.

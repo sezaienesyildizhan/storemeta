@@ -1,35 +1,22 @@
 import { StoremetaError } from "../cli/errors.js";
-import type { AppSettings, StoremetaConfig } from "./types.js";
-
-export interface SingleConfiguredApp {
-  id: string;
-  settings: AppSettings;
-}
+import { listConfiguredApps, type ConfiguredApp } from "./apps.js";
+import type { StoremetaConfig } from "./types.js";
 
 export function hasSingleConfiguredApp(config: StoremetaConfig): boolean {
-  return Object.keys(config.apps).length === 1;
+  return listConfiguredApps(config).length === 1;
 }
 
 export function getSingleConfiguredApp(
   config: StoremetaConfig,
-): SingleConfiguredApp | undefined {
-  const [entry] = Object.entries(config.apps);
+): ConfiguredApp | undefined {
+  const [app] = listConfiguredApps(config);
 
-  if (entry === undefined || !hasSingleConfiguredApp(config)) {
-    return undefined;
-  }
-
-  const [id, settings] = entry;
-
-  return {
-    id,
-    settings,
-  };
+  return hasSingleConfiguredApp(config) ? app : undefined;
 }
 
 export function requireSingleConfiguredApp(
   config: StoremetaConfig,
-): SingleConfiguredApp {
+): ConfiguredApp {
   const app = getSingleConfiguredApp(config);
 
   if (app === undefined) {
