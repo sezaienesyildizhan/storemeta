@@ -243,7 +243,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add unit tests for config loading and validation.
 - [x] Add unit tests for metadata parsing and serialization.
 - [x] Add unit tests for locale normalization and grouping.
-- [ ] Add unit tests for screenshot ordering and path resolution.
+- [x] Add unit tests for screenshot ordering and path resolution.
 - [ ] Add unit tests for Apple metadata mapping.
 - [ ] Add unit tests for Google metadata mapping.
 - [ ] Add tests for dry-run behavior.
