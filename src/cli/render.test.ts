@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { StoremetaError } from "./errors.js";
-import { renderCommandError } from "./render.js";
+import { renderCommandError, renderCommandSummary } from "./render.js";
 
 describe("renderCommandError", () => {
   it("renders consistent labels for storemeta error categories", () => {
@@ -20,5 +20,35 @@ describe("renderCommandError", () => {
     expect(
       renderCommandError(new StoremetaError("FILESYSTEM_ERROR", "Read failed")),
     ).toBe("Filesystem error: Read failed");
+  });
+});
+
+describe("renderCommandSummary", () => {
+  it("renders a standard command summary header and bullet results", () => {
+    expect(
+      renderCommandSummary({
+        status: "success",
+        successCount: 1,
+        failureCount: 0,
+        skippedCount: 0,
+        results: [
+          {
+            target: "apple/en-US",
+            success: true,
+            message: "Synced Apple metadata",
+          },
+        ],
+      }),
+    ).toBe(
+      [
+        "Command Summary",
+        "Status: success",
+        "Succeeded: 1",
+        "Failed: 0",
+        "Skipped: 0",
+        "Results:",
+        "- OK apple/en-US - Synced Apple metadata",
+      ].join("\n"),
+    );
   });
 });

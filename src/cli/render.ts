@@ -34,6 +34,7 @@ function renderErrorLabel(error: StoremetaError): string {
 
 export function renderCommandSummary(summary: CommandSummary): string {
   const lines = [
+    "Command Summary",
     `Status: ${summary.status}`,
     `Succeeded: ${summary.successCount}`,
     `Failed: ${summary.failureCount}`,
@@ -44,7 +45,7 @@ export function renderCommandSummary(summary: CommandSummary): string {
     lines.push("Results:");
     lines.push(
       ...summary.results.map((result) =>
-        `${renderStatusLabel(result.success)} ${result.target}${result.message === undefined ? "" : ` - ${result.message}`}`,
+        `- ${renderStatusLabel(result.success)} ${result.target}${result.message === undefined ? "" : ` - ${result.message}`}`,
       ),
     );
   }
