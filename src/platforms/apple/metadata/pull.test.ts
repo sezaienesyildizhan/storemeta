@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchAppleAppInfoLocalizations,
   fetchAppleAppStoreVersionLocalizations,
+  mergeAppleLocalizations,
   selectPreferredAppleAppStoreVersion,
 } from "./pull.js";
 import type { AppStoreConnectClient } from "../client.js";
@@ -234,5 +235,92 @@ describe("fetchAppleAppStoreVersionLocalizations", () => {
       fetchAppleAppStoreVersionLocalizations(client, "1234567890"),
     ).resolves.toEqual([]);
     expect(requestAllAppStoreConnectPagesMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("mergeAppleLocalizations", () => {
+  it("joins app info and app store version localizations by locale", () => {
+    expect(
+      mergeAppleLocalizations(
+        [
+          {
+            id: "app-info-en",
+            type: "appInfoLocalizations",
+            attributes: {
+              locale: "en-US",
+              name: "Example App",
+            },
+          },
+          {
+            id: "app-info-tr",
+            type: "appInfoLocalizations",
+            attributes: {
+              locale: "tr",
+              name: "Ornek",
+            },
+          },
+        ],
+        [
+          {
+            id: "version-en",
+            type: "appStoreVersionLocalizations",
+            attributes: {
+              locale: "en-US",
+              description: "Description",
+            },
+          },
+          {
+            id: "version-fr",
+            type: "appStoreVersionLocalizations",
+            attributes: {
+              locale: "fr-FR",
+              description: "Description FR",
+            },
+          },
+        ],
+      ),
+    ).toEqual([
+      {
+        locale: "en-US",
+        appInfoLocalization: {
+          id: "app-info-en",
+          type: "appInfoLocalizations",
+          attributes: {
+            locale: "en-US",
+            name: "Example App",
+          },
+        },
+        appStoreVersionLocalization: {
+          id: "version-en",
+          type: "appStoreVersionLocalizations",
+          attributes: {
+            locale: "en-US",
+            description: "Description",
+          },
+        },
+      },
+      {
+        locale: "fr-FR",
+        appStoreVersionLocalization: {
+          id: "version-fr",
+          type: "appStoreVersionLocalizations",
+          attributes: {
+            locale: "fr-FR",
+            description: "Description FR",
+          },
+        },
+      },
+      {
+        locale: "tr",
+        appInfoLocalization: {
+          id: "app-info-tr",
+          type: "appInfoLocalizations",
+          attributes: {
+            locale: "tr",
+            name: "Ornek",
+          },
+        },
+      },
+    ]);
   });
 });

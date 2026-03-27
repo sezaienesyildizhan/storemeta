@@ -154,3 +154,48 @@ export async function fetchAppleAppStoreVersionLocalizations(
     `/appStoreVersions/${encodeURIComponent(selectedVersion.id)}/appStoreVersionLocalizations`,
   );
 }
+
+export interface MergedAppleLocalization {
+  locale: string;
+  appInfoLocalization?: AppleAppInfoLocalizationData;
+  appStoreVersionLocalization?: AppleAppStoreVersionLocalizationData;
+}
+
+export function mergeAppleLocalizations(
+  appInfoLocalizations: AppleAppInfoLocalizationData[],
+  appStoreVersionLocalizations: AppleAppStoreVersionLocalizationData[],
+): MergedAppleLocalization[] {
+  const mergedLocalizations = new Map<string, MergedAppleLocalization>();
+
+  for (const localization of appInfoLocalizations) {
+    const locale = localization.attributes.locale;
+
+    if (locale === undefined || locale.trim().length === 0) {
+      continue;
+    }
+
+    mergedLocalizations.set(locale, {
+      locale,
+      ...mergedLocalizations.get(locale),
+      appInfoLocalization: localization,
+    });
+  }
+
+  for (const localization of appStoreVersionLocalizations) {
+    const locale = localization.attributes.locale;
+
+    if (locale === undefined || locale.trim().length === 0) {
+      continue;
+    }
+
+    mergedLocalizations.set(locale, {
+      locale,
+      ...mergedLocalizations.get(locale),
+      appStoreVersionLocalization: localization,
+    });
+  }
+
+  return [...mergedLocalizations.values()].sort((left, right) =>
+    left.locale.localeCompare(right.locale),
+  );
+}
