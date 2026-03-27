@@ -109,7 +109,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Implement global option parsing.
 - [x] Implement shared command context creation.
 - [x] Implement shared summary and error rendering.
-- [ ] Implement `--verbose`.
+- [x] Implement `--verbose`.
 - [ ] Implement non-zero exit behavior for failures.
 
 ## 11. `storemeta init`

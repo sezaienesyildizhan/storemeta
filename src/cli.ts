@@ -2,6 +2,8 @@
 
 import { Command, Option } from "commander";
 
+import { renderCommandError } from "./cli/render.js";
+
 export interface GlobalOptions {
   config?: string;
   app?: string;
@@ -34,4 +36,14 @@ export async function runCli(argv: string[] = process.argv): Promise<void> {
   await program.parseAsync(argv);
 }
 
-void runCli();
+export function hasVerboseFlag(argv: string[]): boolean {
+  return argv.includes("--verbose");
+}
+
+void runCli().catch((error: unknown) => {
+  console.error(
+    renderCommandError(error, {
+      verbose: hasVerboseFlag(process.argv),
+    }),
+  );
+});
