@@ -126,7 +126,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Validate selected app and platform targets.
 - [x] Validate credential presence.
 - [x] Validate metadata files and schema.
-- [ ] Validate metadata length constraints for Google Play.
+- [x] Validate metadata length constraints for Google Play.
 - [ ] Validate screenshot folder structure.
 - [ ] Validate supported screenshot file extensions.
 - [ ] Validate numeric screenshot ordering.

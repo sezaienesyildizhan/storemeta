@@ -10,7 +10,10 @@ import {
   loadYmlMetadataFile,
 } from "../../formats/load-metadata.js";
 import { validateAppleMetadataDocument } from "./apple.js";
-import { validateGoogleMetadataDocument } from "./google.js";
+import {
+  validateGoogleMetadataDocument,
+  validateGoogleMetadataLengthConstraints,
+} from "./google.js";
 
 async function listMetadataFiles(platformDir: string): Promise<string[]> {
   let entries;
@@ -81,7 +84,8 @@ export async function validateMetadataFiles(
       }
 
       if (platform === "google") {
-        validateGoogleMetadataDocument(parsedDocument);
+        const googleDocument = validateGoogleMetadataDocument(parsedDocument);
+        validateGoogleMetadataLengthConstraints(googleDocument);
       }
     }
   }

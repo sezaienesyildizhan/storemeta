@@ -37,3 +37,38 @@ export function validateGoogleMetadataDocument(
 
   return result.data;
 }
+
+function getCharacterCount(value: string): number {
+  return Array.from(value).length;
+}
+
+export function validateGoogleMetadataLengthConstraints(
+  document: GoogleMetadataDocument,
+): void {
+  const issues: string[] = [];
+
+  if (document.title !== undefined && getCharacterCount(document.title) > 30) {
+    issues.push("title: must be 30 characters or fewer");
+  }
+
+  if (
+    document.short_description !== undefined &&
+    getCharacterCount(document.short_description) > 80
+  ) {
+    issues.push("short_description: must be 80 characters or fewer");
+  }
+
+  if (
+    document.full_description !== undefined &&
+    getCharacterCount(document.full_description) > 4000
+  ) {
+    issues.push("full_description: must be 4000 characters or fewer");
+  }
+
+  if (issues.length > 0) {
+    throw new StoremetaError(
+      "VALIDATION_ERROR",
+      `Google metadata length validation failed: ${issues.join("; ")}`,
+    );
+  }
+}
