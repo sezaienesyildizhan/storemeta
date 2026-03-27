@@ -145,6 +145,7 @@ Initial tooling choices:
 - CLI parser: `commander`
 - HTTP client: native `fetch` from Node.js 20+
 - Test runner: `vitest`
+- Linting and formatting: deferred until core implementation exists
 
 High-level design:
 - one unified CLI surface

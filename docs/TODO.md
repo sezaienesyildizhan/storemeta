@@ -29,7 +29,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add an HTTP client strategy.
 - [x] Add a schema validation library for config and metadata validation.
 - [x] Add test tooling.
-- [ ] Add linting and formatting tooling if desired.
+- [x] Add linting and formatting tooling if desired.
 
 ## 3. Source Structure
 
