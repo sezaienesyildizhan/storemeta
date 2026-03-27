@@ -3,6 +3,7 @@
 import { Command, Option } from "commander";
 
 import { runInitCommand } from "./cli/init.js";
+import { runMetadataPullCommand } from "./cli/metadata-pull.js";
 import { renderCommandError, renderCommandSummary } from "./cli/render.js";
 import { runValidateCommand } from "./cli/validate.js";
 
@@ -50,6 +51,20 @@ export function buildCliProgram(): Command {
         platform: options.platform,
       });
       console.log(renderCommandSummary(summary));
+    });
+
+  program
+    .command("metadata")
+    .description("Metadata commands")
+    .command("pull")
+    .description("Pull remote metadata into the local project")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      await runMetadataPullCommand({
+        config: options.config,
+        app: options.app,
+        locale: options.locale,
+      });
     });
 
   return program;
