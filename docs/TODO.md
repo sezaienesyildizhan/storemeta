@@ -160,7 +160,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 ## 16. Google Screenshots Pull
 
 - [x] Implement image listing for configured locales and image types.
-- [ ] Download remote screenshots into the canonical local directory layout.
+- [x] Download remote screenshots into the canonical local directory layout.
 - [ ] Write deterministic filenames such as `1.png`, `2.png`, `3.png`.
 - [ ] Support configured screenshot groups where relevant.
 - [ ] Handle empty sets cleanly.

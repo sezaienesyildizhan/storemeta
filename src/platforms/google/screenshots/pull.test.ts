@@ -1,7 +1,13 @@
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { describe, expect, it, vi } from "vitest";
 
 import type { GooglePlayClient } from "../client.js";
 import {
+  downloadGoogleImage,
+  downloadGoogleScreenshotSet,
   listGoogleImagesForLocaleAndType,
   listGoogleImagesForLocalesAndTypes,
 } from "./pull.js";
@@ -67,5 +73,78 @@ describe("listGoogleImagesForLocalesAndTypes", () => {
 
     expect(result).toHaveLength(4);
     expect(requestJson).toHaveBeenCalledTimes(4);
+  });
+});
+
+describe("downloadGoogleImage", () => {
+  it("downloads the remote screenshot and infers the extension from content type", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => new TextEncoder().encode("png-data").buffer,
+        headers: new Headers({
+          "content-type": "image/png",
+        }),
+      }),
+    );
+
+    await expect(
+      downloadGoogleImage({
+        url: "https://example.com/screenshot",
+      }),
+    ).resolves.toEqual({
+      buffer: new Uint8Array(new TextEncoder().encode("png-data")),
+      extension: "png",
+    });
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("downloadGoogleScreenshotSet", () => {
+  it("writes screenshots into the canonical google locale and asset-type layout", async () => {
+    const screenshotsBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => new TextEncoder().encode("image-data").buffer,
+        headers: new Headers({
+          "content-type": "image/png",
+        }),
+      }),
+    );
+
+    try {
+      const result = await downloadGoogleScreenshotSet(screenshotsBaseDir, {
+        locale: "en_us",
+        imageType: "phoneScreenshots",
+        images: [
+          {
+            url: "https://example.com/one",
+          },
+        ],
+      });
+
+      expect(result.files).toHaveLength(1);
+      expect(result.files[0]?.fileName).toBe("image-1.png");
+      expect(result.files[0]?.filePath).toBe(
+        join(
+          screenshotsBaseDir,
+          "google",
+          "en-US",
+          "phoneScreenshots",
+          "image-1.png",
+        ),
+      );
+      await expect(readFile(result.files[0]!.filePath, "utf8")).resolves.toBe(
+        "image-data",
+      );
+    } finally {
+      vi.unstubAllGlobals();
+      await rm(screenshotsBaseDir, { recursive: true, force: true });
+    }
   });
 });
