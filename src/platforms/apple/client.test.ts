@@ -48,6 +48,59 @@ describe("AppStoreConnectClient", () => {
       vi.unstubAllGlobals();
     }
   });
+
+  it("renders Apple API errors without leaking auth material", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 409,
+      statusText: "Conflict",
+      json: async () => ({
+        errors: [
+          {
+            code: "ENTITY_ERROR",
+            title: "Invalid Attribute",
+            detail: "The provided value is not allowed.",
+          },
+        ],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      const client = createAppStoreConnectClient({
+        issuerIdEnv: "STORE_APPLE_ISSUER_ID",
+        keyIdEnv: "STORE_APPLE_KEY_ID",
+        privateKeyPathEnv: "STORE_APPLE_PRIVATE_KEY_PATH",
+      });
+
+      await expect(client.requestJson("/apps")).rejects.toThrow(
+        "App Store Connect API request failed with 409 Conflict: ENTITY_ERROR - Invalid Attribute - The provided value is not allowed.",
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("wraps transport failures in a StoremetaError", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("socket hang up")));
+
+    try {
+      const client = createAppStoreConnectClient({
+        issuerIdEnv: "STORE_APPLE_ISSUER_ID",
+        keyIdEnv: "STORE_APPLE_KEY_ID",
+        privateKeyPathEnv: "STORE_APPLE_PRIVATE_KEY_PATH",
+      });
+
+      await expect(client.requestJson("/apps")).rejects.toMatchObject({
+        code: "API_ERROR",
+        message:
+          "App Store Connect API request failed before a response was received",
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe("requestAllAppStoreConnectPages", () => {

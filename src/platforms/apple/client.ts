@@ -20,6 +20,47 @@ export interface AppStoreConnectPagedResponse<T> {
   links?: AppStoreConnectPagedLinks;
 }
 
+interface AppStoreConnectErrorDocument {
+  errors?: Array<{
+    id?: string;
+    status?: string;
+    code?: string;
+    title?: string;
+    detail?: string;
+  }>;
+}
+
+async function createAppStoreConnectErrorMessage(
+  response: Response,
+): Promise<string> {
+  const fallbackMessage =
+    `App Store Connect API request failed with ${response.status} ${response.statusText}`;
+
+  try {
+    const errorDocument =
+      (await response.json()) as AppStoreConnectErrorDocument;
+    const firstError = errorDocument.errors?.[0];
+
+    if (firstError === undefined) {
+      return fallbackMessage;
+    }
+
+    const detailParts = [
+      firstError.code,
+      firstError.title,
+      firstError.detail,
+    ].filter((part): part is string => part !== undefined && part.trim().length > 0);
+
+    if (detailParts.length === 0) {
+      return fallbackMessage;
+    }
+
+    return `${fallbackMessage}: ${detailParts.join(" - ")}`;
+  } catch {
+    return fallbackMessage;
+  }
+}
+
 export class AppStoreConnectClient {
   private readonly credentials: AppleCredentialsSettings;
   private readonly env: NodeJS.ProcessEnv;
@@ -41,19 +82,30 @@ export class AppStoreConnectClient {
       path.startsWith("https://") || path.startsWith("http://")
         ? path
         : `${APP_STORE_CONNECT_API_BASE_URL}${path}`;
-    const response = await fetch(requestUrl, {
-      method: options.method ?? "GET",
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-        ...options.headers,
-      },
-      body: options.body,
-    });
+
+    let response: Response;
+
+    try {
+      response = await fetch(requestUrl, {
+        method: options.method ?? "GET",
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+          ...options.headers,
+        },
+        body: options.body,
+      });
+    } catch (cause) {
+      throw new StoremetaError(
+        "API_ERROR",
+        "App Store Connect API request failed before a response was received",
+        { cause },
+      );
+    }
 
     if (!response.ok) {
       throw new StoremetaError(
         "API_ERROR",
-        `App Store Connect API request failed with ${response.status} ${response.statusText}`,
+        await createAppStoreConnectErrorMessage(response),
       );
     }
 
