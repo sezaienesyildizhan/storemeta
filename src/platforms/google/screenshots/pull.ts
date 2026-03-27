@@ -1,10 +1,12 @@
 import { writeFile } from "node:fs/promises";
 
 import { StoremetaError } from "../../../cli/errors.js";
+import type { GoogleScreenshotSettings } from "../../../config/types.js";
 import type {
   ScreenshotDescriptor,
   ScreenshotSetDescriptor,
 } from "../../../formats/screenshot-types.js";
+import { listScreenshotGroups } from "../../../locales/groups.js";
 import { normalizeLocaleCode } from "../../../locales/normalize.js";
 import { ensureParentDirectory } from "../../../writers/ensure-directory.js";
 import { resolveScreenshotFilePath } from "../../../writers/resolve-screenshot-path.js";
@@ -54,6 +56,42 @@ export async function listGoogleImagesForLocalesAndTypes(
       ),
     ),
   );
+}
+
+export function expandGoogleScreenshotPullLocales(
+  locales: string[],
+  settings?: GoogleScreenshotSettings,
+): string[] {
+  const resolvedLocales: string[] = [];
+  const seenLocales = new Set<string>();
+
+  for (const locale of locales.map(normalizeLocaleCode)) {
+    if (seenLocales.has(locale)) {
+      continue;
+    }
+
+    resolvedLocales.push(locale);
+    seenLocales.add(locale);
+  }
+
+  for (const group of listScreenshotGroups(settings)) {
+    const groupMatches = group.locales.some((locale) => seenLocales.has(locale));
+
+    if (!groupMatches) {
+      continue;
+    }
+
+    for (const locale of group.locales) {
+      if (seenLocales.has(locale)) {
+        continue;
+      }
+
+      resolvedLocales.push(locale);
+      seenLocales.add(locale);
+    }
+  }
+
+  return resolvedLocales;
 }
 
 function normalizeGoogleImageExtension(extension: string): string {

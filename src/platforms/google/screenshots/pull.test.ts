@@ -8,6 +8,7 @@ import type { GooglePlayClient } from "../client.js";
 import {
   downloadGoogleImage,
   downloadGoogleScreenshotSet,
+  expandGoogleScreenshotPullLocales,
   listGoogleImagesForLocaleAndType,
   listGoogleImagesForLocalesAndTypes,
 } from "./pull.js";
@@ -99,6 +100,35 @@ describe("downloadGoogleImage", () => {
     });
 
     vi.unstubAllGlobals();
+  });
+});
+
+describe("expandGoogleScreenshotPullLocales", () => {
+  it("adds grouped locales when one locale in the group is already targeted", () => {
+    expect(
+      expandGoogleScreenshotPullLocales(["tr-TR", "en_us"], {
+        groups: {
+          english: {
+            locales: ["en-US", "en-GB", "en-AU"],
+          },
+          spanish: {
+            locales: ["es-ES", "es-419"],
+          },
+        },
+      }),
+    ).toEqual(["tr-TR", "en-US", "en-GB", "en-AU"]);
+  });
+
+  it("keeps locales unique after normalization and group expansion", () => {
+    expect(
+      expandGoogleScreenshotPullLocales(["en-US", "en_us"], {
+        groups: {
+          english: {
+            locales: ["en-US", "en-GB"],
+          },
+        },
+      }),
+    ).toEqual(["en-US", "en-GB"]);
   });
 });
 
