@@ -151,7 +151,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 15. Google Metadata Push
 
-- [ ] Load and validate local Google metadata files.
+- [x] Load and validate local Google metadata files.
 - [ ] Map local metadata into Google API payloads.
 - [ ] Upload listing text through an edit session.
 - [ ] Support `--dry-run`.
