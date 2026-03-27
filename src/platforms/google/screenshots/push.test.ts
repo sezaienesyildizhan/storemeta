@@ -4,7 +4,10 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { loadGoogleScreenshotSets } from "./push.js";
+import {
+  loadGoogleScreenshotSets,
+  mapGoogleScreenshotSetsToTargets,
+} from "./push.js";
 
 describe("loadGoogleScreenshotSets", () => {
   it("loads normalized Google screenshot sets from the canonical directory layout", async () => {
@@ -90,5 +93,112 @@ describe("loadGoogleScreenshotSets", () => {
     } finally {
       await rm(screenshotsBaseDir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("mapGoogleScreenshotSetsToTargets", () => {
+  it("maps local screenshot sets through locale mapping and grouped target locales", () => {
+    expect(
+      mapGoogleScreenshotSetsToTargets(
+        [
+          {
+            platform: "google",
+            locale: "en_us",
+            assetType: "phoneScreenshots",
+            files: [
+              {
+                platform: "google",
+                locale: "en_us",
+                assetType: "phoneScreenshots",
+                filePath: "/tmp/en_us/1.png",
+                fileName: "1.png",
+                position: 1,
+              },
+            ],
+          },
+        ],
+        {
+          locales: {
+            map: {
+              en_us: "en-US",
+            },
+          },
+          screenshots: {
+            groups: {
+              english: {
+                locales: ["en-US", "en-GB"],
+              },
+            },
+          },
+        },
+      ),
+    ).toEqual([
+      {
+        platform: "google",
+        locale: "en-GB",
+        targetLocale: "en-GB",
+        sourceLocale: "en-US",
+        assetType: "phoneScreenshots",
+        imageType: "phoneScreenshots",
+        files: [
+          {
+            platform: "google",
+            locale: "en-GB",
+            assetType: "phoneScreenshots",
+            filePath: "/tmp/en_us/1.png",
+            fileName: "1.png",
+            position: 1,
+          },
+        ],
+      },
+      {
+        platform: "google",
+        locale: "en-US",
+        targetLocale: "en-US",
+        sourceLocale: "en-US",
+        assetType: "phoneScreenshots",
+        imageType: "phoneScreenshots",
+        files: [
+          {
+            platform: "google",
+            locale: "en-US",
+            assetType: "phoneScreenshots",
+            filePath: "/tmp/en_us/1.png",
+            fileName: "1.png",
+            position: 1,
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("rejects ambiguous target mappings from overlapping local sources", () => {
+    expect(() =>
+      mapGoogleScreenshotSetsToTargets(
+        [
+          {
+            platform: "google",
+            locale: "en-US",
+            assetType: "phoneScreenshots",
+            files: [],
+          },
+          {
+            platform: "google",
+            locale: "en-GB",
+            assetType: "phoneScreenshots",
+            files: [],
+          },
+        ],
+        {
+          screenshots: {
+            groups: {
+              english: {
+                locales: ["en-US", "en-GB"],
+              },
+            },
+          },
+        },
+      ),
+    ).toThrow(/defined by both en-US and en-GB/);
   });
 });

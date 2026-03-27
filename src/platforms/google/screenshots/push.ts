@@ -3,9 +3,16 @@ import { extname, join, resolve } from "node:path";
 
 import { StoremetaError } from "../../../cli/errors.js";
 import type {
+  GoogleAppSettings,
+  GoogleScreenshotSettings,
+  LocaleSettings,
+} from "../../../config/types.js";
+import type {
   ScreenshotDescriptor,
   ScreenshotSetDescriptor,
 } from "../../../formats/screenshot-types.js";
+import { listScreenshotGroups } from "../../../locales/groups.js";
+import { mapLocaleCode, mapLocaleCodes } from "../../../locales/map.js";
 import { normalizeLocaleCode } from "../../../locales/normalize.js";
 import {
   GOOGLE_SCREENSHOT_IMAGE_TYPES,
@@ -113,6 +120,55 @@ function createGoogleScreenshotDescriptors(
   }));
 }
 
+function resolveGoogleScreenshotGroupLocales(
+  sourceLocale: string,
+  localeSettings: LocaleSettings | undefined,
+  screenshotSettings: GoogleScreenshotSettings | undefined,
+): string[] {
+  const mappedSourceLocale = mapLocaleCode(sourceLocale, localeSettings);
+  const matchingGroups = listScreenshotGroups(screenshotSettings).filter((group) => {
+    const mappedGroupLocales = mapLocaleCodes(group.locales, localeSettings);
+
+    return (
+      group.locales.includes(sourceLocale) ||
+      group.locales.includes(mappedSourceLocale) ||
+      mappedGroupLocales.includes(mappedSourceLocale)
+    );
+  });
+
+  if (matchingGroups.length > 1) {
+    throw new StoremetaError(
+      "VALIDATION_ERROR",
+      `Google screenshot locale ${sourceLocale} matches multiple screenshot groups`,
+    );
+  }
+
+  if (matchingGroups.length === 0) {
+    return [mappedSourceLocale];
+  }
+
+  const mappedGroupLocales = mapLocaleCodes(
+    matchingGroups[0]!.locales,
+    localeSettings,
+  );
+  const uniqueLocales = new Set(mappedGroupLocales);
+
+  if (uniqueLocales.size !== mappedGroupLocales.length) {
+    throw new StoremetaError(
+      "VALIDATION_ERROR",
+      `Google screenshot group ${matchingGroups[0]!.name} resolves to duplicate target locales`,
+    );
+  }
+
+  return mappedGroupLocales;
+}
+
+export interface GoogleScreenshotUploadTarget extends ScreenshotSetDescriptor {
+  sourceLocale: string;
+  targetLocale: string;
+  imageType: GoogleScreenshotImageType;
+}
+
 export async function loadGoogleScreenshotSets(
   screenshotsBaseDir: string,
 ): Promise<ScreenshotSetDescriptor[]> {
@@ -175,5 +231,69 @@ export async function loadGoogleScreenshotSets(
     }
 
     return left.assetType.localeCompare(right.assetType);
+  });
+}
+
+export function mapGoogleScreenshotSetsToTargets(
+  screenshotSets: ScreenshotSetDescriptor[],
+  settings: Pick<GoogleAppSettings, "locales" | "screenshots">,
+): GoogleScreenshotUploadTarget[] {
+  const uploadTargets: GoogleScreenshotUploadTarget[] = [];
+  const seenTargets = new Map<string, string>();
+
+  for (const screenshotSet of screenshotSets) {
+    const imageType = validateGoogleScreenshotAssetType(
+      screenshotSet.assetType,
+      screenshotSet.assetType,
+    );
+    const sourceLocale = normalizeLocaleCode(screenshotSet.locale);
+    const targetLocales = resolveGoogleScreenshotGroupLocales(
+      sourceLocale,
+      settings.locales,
+      settings.screenshots,
+    );
+
+    for (const targetLocale of targetLocales) {
+      const targetKey = `${targetLocale}:${imageType}`;
+      const existingSourceLocale = seenTargets.get(targetKey);
+
+      if (existingSourceLocale !== undefined && existingSourceLocale !== sourceLocale) {
+        throw new StoremetaError(
+          "VALIDATION_ERROR",
+          `Google screenshot target ${targetLocale}/${imageType} is defined by both ${existingSourceLocale} and ${sourceLocale}`,
+        );
+      }
+
+      seenTargets.set(targetKey, sourceLocale);
+      uploadTargets.push({
+        platform: "google",
+        locale: targetLocale,
+        targetLocale,
+        sourceLocale,
+        assetType: imageType,
+        imageType,
+        files: screenshotSet.files.map((file) => ({
+          ...file,
+          locale: targetLocale,
+          assetType: imageType,
+        })),
+      });
+    }
+  }
+
+  return uploadTargets.sort((left, right) => {
+    const localeOrder = left.targetLocale.localeCompare(right.targetLocale);
+
+    if (localeOrder !== 0) {
+      return localeOrder;
+    }
+
+    const imageTypeOrder = left.imageType.localeCompare(right.imageType);
+
+    if (imageTypeOrder !== 0) {
+      return imageTypeOrder;
+    }
+
+    return left.sourceLocale.localeCompare(right.sourceLocale);
   });
 }

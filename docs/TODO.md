@@ -168,7 +168,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 ## 17. Google Screenshots Push
 
 - [x] Load and validate local screenshot sets.
-- [ ] Map local screenshots to target locales and image types.
+- [x] Map local screenshots to target locales and image types.
 - [ ] Implement optional clearing of existing screenshots before upload.
 - [ ] Upload screenshots through the Google edit session.
 - [ ] Support `--dry-run`.
