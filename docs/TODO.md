@@ -16,7 +16,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Set the CLI binary name to `storemeta` via the `bin` field.
 - [x] Add `type`, `engines`, `files`, `scripts`, and initial metadata to `package.json`.
 - [x] Create `tsconfig.json`.
-- [ ] Create the initial source tree under `src/`.
+- [x] Create the initial source tree under `src/`.
 - [ ] Add a build output target such as `dist/`.
 - [ ] Add a minimal `.npmignore` or rely on `package.json` `files`.
 - [ ] Add a basic `CONTRIBUTING.md`.
