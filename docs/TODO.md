@@ -241,7 +241,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 ## 25. Automated Tests
 
 - [x] Add unit tests for config loading and validation.
-- [ ] Add unit tests for metadata parsing and serialization.
+- [x] Add unit tests for metadata parsing and serialization.
 - [ ] Add unit tests for locale normalization and grouping.
 - [ ] Add unit tests for screenshot ordering and path resolution.
 - [ ] Add unit tests for Apple metadata mapping.
