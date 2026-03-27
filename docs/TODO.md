@@ -142,7 +142,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 14. Google Metadata Pull
 
-- [ ] Implement listing fetch for one locale.
+- [x] Implement listing fetch for one locale.
 - [ ] Implement listing fetch for all target locales.
 - [ ] Normalize remote listing data into the local metadata schema.
 - [ ] Write one file per locale.
