@@ -1,3 +1,6 @@
 {
-  "name": "storemeta"
+  "name": "storemeta",
+  "bin": {
+    "storemeta": "./dist/cli.js"
+  }
 }
