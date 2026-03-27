@@ -9,7 +9,14 @@ import {
   loadYmlMetadataFile,
 } from "../../../formats/load-metadata.js";
 import type { AppStoreConnectClient } from "../client.js";
-import { requestAllAppStoreConnectPages } from "../client.js";
+import {
+  patchAppStoreConnectJson,
+  requestAllAppStoreConnectPages,
+} from "../client.js";
+import type {
+  AppleAppInfoLocalizationData,
+  AppleAppInfoLocalizationPayload,
+} from "./types.js";
 import { validateAppleMetadataDocument } from "../../../validation/metadata/apple.js";
 
 async function listAppleMetadataFiles(metadataBaseDir: string): Promise<string[]> {
@@ -228,4 +235,71 @@ export async function resolveEditableAppleAppStoreVersionResource(
   }
 
   return selectedVersion;
+}
+
+function mapAppleMetadataToAppInfoLocalizationPayload(
+  document: AppleMetadataDocument,
+  localizationId: string,
+): AppleAppInfoLocalizationPayload {
+  return {
+    data: {
+      id: localizationId,
+      type: "appInfoLocalizations",
+      attributes: {
+        locale: document.locale,
+        name: document.app_name,
+        subtitle: document.subtitle,
+        privacyPolicyUrl: document.privacy_policy_url,
+      },
+    },
+  };
+}
+
+async function listAppleAppInfoLocalizations(
+  client: AppStoreConnectClient,
+  appInfoId: string,
+): Promise<AppleAppInfoLocalizationData[]> {
+  return requestAllAppStoreConnectPages<AppleAppInfoLocalizationData>(
+    client,
+    `/appInfos/${encodeURIComponent(appInfoId)}/appInfoLocalizations`,
+  );
+}
+
+export interface AppleUpdatedAppInfoLocalizationResult {
+  locale: string;
+  localizationId: string;
+}
+
+export async function updateExistingAppleAppInfoLocalizations(
+  client: AppStoreConnectClient,
+  appInfoId: string,
+  documents: AppleMetadataDocument[],
+): Promise<AppleUpdatedAppInfoLocalizationResult[]> {
+  const localizations = await listAppleAppInfoLocalizations(client, appInfoId);
+  const localizationsByLocale = new Map(
+    localizations
+      .filter((localization) => localization.id !== undefined)
+      .map((localization) => [localization.attributes.locale, localization] as const),
+  );
+  const results: AppleUpdatedAppInfoLocalizationResult[] = [];
+
+  for (const document of documents) {
+    const localization = localizationsByLocale.get(document.locale);
+
+    if (localization?.id === undefined) {
+      continue;
+    }
+
+    await patchAppStoreConnectJson(
+      client,
+      `/appInfoLocalizations/${encodeURIComponent(localization.id)}`,
+      mapAppleMetadataToAppInfoLocalizationPayload(document, localization.id),
+    );
+    results.push({
+      locale: document.locale,
+      localizationId: localization.id,
+    });
+  }
+
+  return results.sort((left, right) => left.locale.localeCompare(right.locale));
 }

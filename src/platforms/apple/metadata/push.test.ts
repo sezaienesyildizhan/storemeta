@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   loadAppleMetadataDocuments,
+  updateExistingAppleAppInfoLocalizations,
   resolveAppleAppInfoResource,
   resolveEditableAppleAppStoreVersionResource,
   selectAppleAppInfoResource,
@@ -13,8 +14,12 @@ import {
 } from "./push.js";
 import type { AppStoreConnectClient } from "../client.js";
 
-const { requestAllAppStoreConnectPagesMock } = vi.hoisted(() => ({
+const {
+  requestAllAppStoreConnectPagesMock,
+  patchAppStoreConnectJsonMock,
+} = vi.hoisted(() => ({
   requestAllAppStoreConnectPagesMock: vi.fn(),
+  patchAppStoreConnectJsonMock: vi.fn(),
 }));
 
 vi.mock("../client.js", async () => {
@@ -22,12 +27,14 @@ vi.mock("../client.js", async () => {
 
   return {
     ...actual,
+    patchAppStoreConnectJson: patchAppStoreConnectJsonMock,
     requestAllAppStoreConnectPages: requestAllAppStoreConnectPagesMock,
   };
 });
 
 beforeEach(() => {
   requestAllAppStoreConnectPagesMock.mockReset();
+  patchAppStoreConnectJsonMock.mockReset();
 });
 
 describe("loadAppleMetadataDocuments", () => {
@@ -232,5 +239,64 @@ describe("resolveEditableAppleAppStoreVersionResource", () => {
     await expect(
       resolveEditableAppleAppStoreVersionResource(client, "1234567890"),
     ).rejects.toThrow(/returned no editable app store version/);
+  });
+});
+
+describe("updateExistingAppleAppInfoLocalizations", () => {
+  it("patches only Apple app info localizations that already exist", async () => {
+    requestAllAppStoreConnectPagesMock.mockResolvedValueOnce([
+      {
+        id: "app-info-loc-en",
+        type: "appInfoLocalizations",
+        attributes: {
+          locale: "en-US",
+        },
+      },
+    ]);
+    patchAppStoreConnectJsonMock.mockResolvedValue({});
+
+    const client = {} as AppStoreConnectClient;
+
+    await expect(
+      updateExistingAppleAppInfoLocalizations(client, "app-info-1", [
+        {
+          locale: "en-US",
+          app_name: "Example App",
+          subtitle: "Subtitle",
+          privacy_policy_url: "https://example.com/privacy",
+        },
+        {
+          locale: "tr",
+          app_name: "Ornek",
+        },
+      ]),
+    ).resolves.toEqual([
+      {
+        locale: "en-US",
+        localizationId: "app-info-loc-en",
+      },
+    ]);
+
+    expect(requestAllAppStoreConnectPagesMock).toHaveBeenCalledWith(
+      client,
+      "/appInfos/app-info-1/appInfoLocalizations",
+    );
+    expect(patchAppStoreConnectJsonMock).toHaveBeenCalledTimes(1);
+    expect(patchAppStoreConnectJsonMock).toHaveBeenCalledWith(
+      client,
+      "/appInfoLocalizations/app-info-loc-en",
+      {
+        data: {
+          id: "app-info-loc-en",
+          type: "appInfoLocalizations",
+          attributes: {
+            locale: "en-US",
+            name: "Example App",
+            subtitle: "Subtitle",
+            privacyPolicyUrl: "https://example.com/privacy",
+          },
+        },
+      },
+    );
   });
 });
