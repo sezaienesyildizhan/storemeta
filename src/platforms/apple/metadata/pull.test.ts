@@ -374,6 +374,34 @@ describe("normalizeMergedAppleLocalization", () => {
       whats_new: "Bug fixes",
     });
   });
+
+  it("maps partial Apple localization data without inventing missing version fields", () => {
+    expect(
+      normalizeMergedAppleLocalization({
+        locale: "tr",
+        appInfoLocalization: {
+          id: "app-info-tr",
+          type: "appInfoLocalizations",
+          attributes: {
+            locale: "tr",
+            name: "Ornek",
+            subtitle: "Alt baslik",
+          },
+        },
+      }),
+    ).toEqual({
+      locale: "tr",
+      app_name: "Ornek",
+      subtitle: "Alt baslik",
+      privacy_policy_url: undefined,
+      description: undefined,
+      keywords: undefined,
+      marketing_url: undefined,
+      promotional_text: undefined,
+      support_url: undefined,
+      whats_new: undefined,
+    });
+  });
 });
 
 describe("normalizeMergedAppleLocalizations", () => {
