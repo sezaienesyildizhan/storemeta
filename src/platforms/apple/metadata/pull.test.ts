@@ -1,3 +1,7 @@
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -7,6 +11,7 @@ import {
   normalizeMergedAppleLocalization,
   normalizeMergedAppleLocalizations,
   selectPreferredAppleAppStoreVersion,
+  writeAppleMetadataDocument,
 } from "./pull.js";
 import type { AppStoreConnectClient } from "../client.js";
 
@@ -390,5 +395,28 @@ describe("normalizeMergedAppleLocalizations", () => {
         locale: "en-US",
       },
     ]);
+  });
+});
+
+describe("writeAppleMetadataDocument", () => {
+  it("writes one Apple metadata file per locale in the canonical layout", async () => {
+    const metadataBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+
+    try {
+      const filePath = await writeAppleMetadataDocument(metadataBaseDir, {
+        locale: "en_us",
+        app_name: "Example App",
+      });
+
+      expect(filePath).toBe(join(metadataBaseDir, "apple", "en-US.yml"));
+      await expect(readFile(filePath, "utf8")).resolves.toContain(
+        "locale: en-US",
+      );
+      await expect(readFile(filePath, "utf8")).resolves.toContain(
+        "app_name: Example App",
+      );
+    } finally {
+      await rm(metadataBaseDir, { recursive: true, force: true });
+    }
   });
 });

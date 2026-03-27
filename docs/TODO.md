@@ -188,7 +188,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Fetch app store version localizations.
 - [x] Join the two localization models into one local metadata document per locale.
 - [x] Normalize fields into the local Apple metadata schema.
-- [ ] Write one file per locale.
+- [x] Write one file per locale.
 - [ ] Support `--locale`.
 
 ## 20. Apple Metadata Push

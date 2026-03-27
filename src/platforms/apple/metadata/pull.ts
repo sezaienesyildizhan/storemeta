@@ -1,5 +1,6 @@
 import type { AppleMetadataDocument } from "../../../formats/metadata-types.js";
 import { normalizeLocaleCode } from "../../../locales/normalize.js";
+import { writeMetadataFile } from "../../../writers/write-metadata.js";
 import type { AppStoreConnectClient } from "../client.js";
 import { requestAllAppStoreConnectPages } from "../client.js";
 import type {
@@ -226,4 +227,31 @@ export function normalizeMergedAppleLocalizations(
   localizations: MergedAppleLocalization[],
 ): AppleMetadataDocument[] {
   return localizations.map(normalizeMergedAppleLocalization);
+}
+
+export async function writeAppleMetadataDocument(
+  metadataBaseDir: string,
+  document: AppleMetadataDocument,
+): Promise<string> {
+  const normalizedLocale = normalizeLocaleCode(document.locale);
+
+  return writeMetadataFile(
+    metadataBaseDir,
+    `apple/${normalizedLocale}.yml`,
+    {
+      ...document,
+      locale: normalizedLocale,
+    },
+  );
+}
+
+export async function writeAppleMetadataDocuments(
+  metadataBaseDir: string,
+  documents: AppleMetadataDocument[],
+): Promise<string[]> {
+  return Promise.all(
+    documents.map((document) =>
+      writeAppleMetadataDocument(metadataBaseDir, document),
+    ),
+  );
 }
