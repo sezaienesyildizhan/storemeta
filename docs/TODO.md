@@ -194,7 +194,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 ## 20. Apple Metadata Push
 
 - [x] Load and validate local Apple metadata files.
-- [ ] Resolve the target app info resource.
+- [x] Resolve the target app info resource.
 - [ ] Resolve the target editable app store version resource.
 - [ ] Update existing app info localizations.
 - [ ] Create missing app info localizations when allowed.

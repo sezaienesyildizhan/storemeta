@@ -8,6 +8,8 @@ import {
   loadYamlMetadataFile,
   loadYmlMetadataFile,
 } from "../../../formats/load-metadata.js";
+import type { AppStoreConnectClient } from "../client.js";
+import { requestAllAppStoreConnectPages } from "../client.js";
 import { validateAppleMetadataDocument } from "../../../validation/metadata/apple.js";
 
 async function listAppleMetadataFiles(metadataBaseDir: string): Promise<string[]> {
@@ -74,4 +76,45 @@ export async function loadAppleMetadataDocuments(
   }
 
   return documents.sort((left, right) => left.locale.localeCompare(right.locale));
+}
+
+interface AppleAppInfoAttributes {
+  appStoreState?: string;
+  platform?: "IOS" | "MAC_OS" | "TV_OS" | "VISION_OS";
+}
+
+export interface AppleAppInfoResource {
+  id: string;
+  type: "appInfos";
+  attributes?: AppleAppInfoAttributes;
+}
+
+export function selectAppleAppInfoResource(
+  appInfos: AppleAppInfoResource[],
+): AppleAppInfoResource | undefined {
+  const iosAppInfo = appInfos.find(
+    (appInfo) => appInfo.attributes?.platform === "IOS",
+  );
+
+  return iosAppInfo ?? appInfos[0];
+}
+
+export async function resolveAppleAppInfoResource(
+  client: AppStoreConnectClient,
+  appId: string,
+): Promise<AppleAppInfoResource> {
+  const appInfos = await requestAllAppStoreConnectPages<AppleAppInfoResource>(
+    client,
+    `/apps/${encodeURIComponent(appId)}/appInfos`,
+  );
+  const selectedAppInfo = selectAppleAppInfoResource(appInfos);
+
+  if (selectedAppInfo === undefined) {
+    throw new StoremetaError(
+      "API_ERROR",
+      `App Store Connect returned no app info resource for app ${appId}`,
+    );
+  }
+
+  return selectedAppInfo;
 }
