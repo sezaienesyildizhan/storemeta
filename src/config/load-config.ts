@@ -5,14 +5,20 @@ import YAML from "yaml";
 
 import { StoremetaError } from "../cli/errors.js";
 
+export const DEFAULT_CONFIG_FILE = "storemeta.yml";
+
 export interface LoadedConfigFile {
   path: string;
   raw: string;
   parsed: unknown;
 }
 
-export async function loadConfigFile(configPath: string): Promise<LoadedConfigFile> {
-  const resolvedPath = resolve(configPath);
+export function resolveConfigPath(configPath?: string): string {
+  return resolve(configPath ?? DEFAULT_CONFIG_FILE);
+}
+
+export async function loadConfigFile(configPath?: string): Promise<LoadedConfigFile> {
+  const resolvedPath = resolveConfigPath(configPath);
 
   let raw: string;
   try {

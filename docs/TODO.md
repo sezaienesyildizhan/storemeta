@@ -60,7 +60,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 ## 5. Config System
 
 - [x] Implement loading for `storemeta.yml`.
-- [ ] Support `--config <path>`.
+- [x] Support `--config <path>`.
 - [ ] Implement schema validation for the root config.
 - [ ] Support single-app usage cleanly.
 - [ ] Support multi-app config structure even if only one app is used initially.
