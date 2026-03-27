@@ -35,7 +35,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 - [x] Create `src/cli/`.
 - [x] Create `src/config/`.
-- [ ] Create `src/formats/`.
+- [x] Create `src/formats/`.
 - [ ] Create `src/locales/`.
 - [ ] Create `src/writers/`.
 - [ ] Create `src/validation/`.
