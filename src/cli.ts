@@ -46,6 +46,8 @@ export function buildCliProgram(): Command {
       const options = program.opts<GlobalOptions>();
       await runValidateCommand({
         config: options.config,
+        app: options.app,
+        platform: options.platform,
       });
     });
 
