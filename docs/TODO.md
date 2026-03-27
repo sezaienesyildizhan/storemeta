@@ -7,7 +7,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [ ] Rotate any previously used Apple and Google credentials before anything public is pushed.
 - [x] Ensure `reference/` stays ignored and is never added to Git history.
 - [x] Add any additional local-only secret paths to `.gitignore` if needed.
-- [ ] Confirm the repo contains no machine-specific paths or private metadata.
+- [x] Confirm the repo contains no machine-specific paths or private metadata.
 
 ## 1. Project Scaffold
 
