@@ -80,7 +80,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 ## 7. Metadata File Parsing
 
 - [x] Implement YAML parsing for `.yml`.
-- [ ] Implement YAML parsing for `.yaml`.
+- [x] Implement YAML parsing for `.yaml`.
 - [ ] Implement YAML parsing for `.md` file contents.
 - [ ] Add deterministic serialization for pulled metadata files.
 - [ ] Preserve stable key ordering in written files.

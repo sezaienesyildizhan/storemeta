@@ -11,15 +11,16 @@ export interface LoadedMetadataFile {
   parsed: unknown;
 }
 
-export async function loadYmlMetadataFile(
+async function loadMetadataFileForExtension(
   filePath: string,
+  expectedExtension: ".yml" | ".yaml",
 ): Promise<LoadedMetadataFile> {
   const resolvedPath = resolve(filePath);
 
-  if (extname(resolvedPath).toLowerCase() !== ".yml") {
+  if (extname(resolvedPath).toLowerCase() !== expectedExtension) {
     throw new StoremetaError(
       "FILESYSTEM_ERROR",
-      `Expected a .yml metadata file: ${resolvedPath}`,
+      `Expected a ${expectedExtension} metadata file: ${resolvedPath}`,
     );
   }
 
@@ -52,4 +53,16 @@ export async function loadYmlMetadataFile(
     raw,
     parsed,
   };
+}
+
+export async function loadYmlMetadataFile(
+  filePath: string,
+): Promise<LoadedMetadataFile> {
+  return loadMetadataFileForExtension(filePath, ".yml");
+}
+
+export async function loadYamlMetadataFile(
+  filePath: string,
+): Promise<LoadedMetadataFile> {
+  return loadMetadataFileForExtension(filePath, ".yaml");
 }
