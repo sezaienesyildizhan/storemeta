@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearAppleScreenshotUploadTargets,
   loadAppleScreenshotSets,
+  reserveAppleScreenshotUploads,
   resolveOrCreateAppleScreenshotUploadTargets,
   resolveOrCreateAppleScreenshotLocalizations,
 } from "./push.js";
@@ -529,5 +530,159 @@ describe("clearAppleScreenshotUploadTargets", () => {
 
     expect(fetchAppleScreenshotsForSetsMock).not.toHaveBeenCalled();
     expect(requestMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("reserveAppleScreenshotUploads", () => {
+  it("creates Apple screenshot upload reservations with file metadata", async () => {
+    const screenshotsBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+    const screenshotPath = join(screenshotsBaseDir, "1.png");
+
+    await writeFile(screenshotPath, "apple-image");
+    postAppStoreConnectJsonMock.mockResolvedValueOnce({
+      data: {
+        id: "screenshot-en-1",
+        type: "appScreenshots",
+        attributes: {
+          uploadOperations: [
+            {
+              method: "PUT",
+              url: "https://uploads.example.com/part-1",
+              offset: 0,
+              length: 11,
+              requestHeaders: [
+                {
+                  name: "Content-Type",
+                  value: "image/png",
+                },
+              ],
+            },
+          ],
+        },
+      },
+    });
+
+    try {
+      const client = {} as AppStoreConnectClient;
+
+      await expect(
+        reserveAppleScreenshotUploads(client, [
+          {
+            platform: "apple",
+            locale: "en-US",
+            assetType: "APP_IPHONE_65",
+            files: [
+              {
+                platform: "apple",
+                locale: "en-US",
+                assetType: "APP_IPHONE_65",
+                filePath: screenshotPath,
+                fileName: "1.png",
+                position: 1,
+              },
+            ],
+            localizationId: "version-loc-en",
+            screenshotSetId: "set-en-65",
+          },
+        ]),
+      ).resolves.toEqual([
+        {
+          locale: "en-US",
+          assetType: "APP_IPHONE_65",
+          screenshotSetId: "set-en-65",
+          screenshotId: "screenshot-en-1",
+          file: {
+            platform: "apple",
+            locale: "en-US",
+            assetType: "APP_IPHONE_65",
+            filePath: screenshotPath,
+            fileName: "1.png",
+            position: 1,
+          },
+          uploadOperations: [
+            {
+              method: "PUT",
+              url: "https://uploads.example.com/part-1",
+              offset: 0,
+              length: 11,
+              requestHeaders: [
+                {
+                  name: "Content-Type",
+                  value: "image/png",
+                },
+              ],
+            },
+          ],
+        },
+      ]);
+
+      expect(postAppStoreConnectJsonMock).toHaveBeenCalledWith(
+        client,
+        "/appScreenshots",
+        {
+          data: {
+            type: "appScreenshots",
+            attributes: {
+              fileName: "1.png",
+              fileSize: 11,
+            },
+            relationships: {
+              appScreenshotSet: {
+                data: {
+                  type: "appScreenshotSets",
+                  id: "set-en-65",
+                },
+              },
+            },
+          },
+        },
+      );
+    } finally {
+      await rm(screenshotsBaseDir, { recursive: true, force: true });
+    }
+  });
+
+  it("fails when Apple does not return upload operations for a reservation", async () => {
+    const screenshotsBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+    const screenshotPath = join(screenshotsBaseDir, "1.png");
+
+    await writeFile(screenshotPath, "apple-image");
+    postAppStoreConnectJsonMock.mockResolvedValueOnce({
+      data: {
+        id: "screenshot-en-1",
+        type: "appScreenshots",
+        attributes: {},
+      },
+    });
+
+    try {
+      const client = {} as AppStoreConnectClient;
+
+      await expect(
+        reserveAppleScreenshotUploads(client, [
+          {
+            platform: "apple",
+            locale: "en-US",
+            assetType: "APP_IPHONE_65",
+            files: [
+              {
+                platform: "apple",
+                locale: "en-US",
+                assetType: "APP_IPHONE_65",
+                filePath: screenshotPath,
+                fileName: "1.png",
+                position: 1,
+              },
+            ],
+            localizationId: "version-loc-en",
+            screenshotSetId: "set-en-65",
+          },
+        ]),
+      ).rejects.toThrow(
+        /did not return upload operations for en-US\/APP_IPHONE_65\/1.png/,
+      );
+    } finally {
+      await rm(screenshotsBaseDir, { recursive: true, force: true });
+    }
   });
 });

@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 
 import { StoremetaError } from "../../../cli/errors.js";
@@ -512,5 +512,144 @@ export async function clearAppleScreenshotUploadTargets(
     }
 
     return left.assetType.localeCompare(right.assetType);
+  });
+}
+
+export interface AppleUploadOperation {
+  method?: string;
+  url?: string;
+  length?: number;
+  offset?: number;
+  requestHeaders?: Array<{
+    name?: string;
+    value?: string;
+  }>;
+}
+
+interface AppleAppScreenshotReservationAttributes {
+  fileName?: string;
+  fileSize?: number;
+  uploadOperations?: AppleUploadOperation[];
+}
+
+interface AppleAppScreenshotReservationData {
+  id?: string;
+  type: "appScreenshots";
+  attributes?: AppleAppScreenshotReservationAttributes;
+}
+
+interface AppleAppScreenshotReservationPayload {
+  data: {
+    type: "appScreenshots";
+    attributes: {
+      fileName: string;
+      fileSize: number;
+    };
+    relationships: {
+      appScreenshotSet: {
+        data: {
+          type: "appScreenshotSets";
+          id: string;
+        };
+      };
+    };
+  };
+}
+
+function mapAppleScreenshotReservationPayload(
+  screenshotSetId: string,
+  fileName: string,
+  fileSize: number,
+): AppleAppScreenshotReservationPayload {
+  return {
+    data: {
+      type: "appScreenshots",
+      attributes: {
+        fileName,
+        fileSize,
+      },
+      relationships: {
+        appScreenshotSet: {
+          data: {
+            type: "appScreenshotSets",
+            id: screenshotSetId,
+          },
+        },
+      },
+    },
+  };
+}
+
+export interface AppleReservedScreenshotUpload {
+  locale: string;
+  assetType: string;
+  screenshotSetId: string;
+  screenshotId: string;
+  file: ScreenshotDescriptor;
+  uploadOperations: AppleUploadOperation[];
+}
+
+export async function reserveAppleScreenshotUploads(
+  client: AppStoreConnectClient,
+  uploadTargets: AppleScreenshotUploadTarget[],
+): Promise<AppleReservedScreenshotUpload[]> {
+  const reservations: AppleReservedScreenshotUpload[] = [];
+
+  for (const uploadTarget of uploadTargets) {
+    for (const file of uploadTarget.files) {
+      const fileStats = await stat(file.filePath);
+      const response = await postAppStoreConnectJson<{
+        data: AppleAppScreenshotReservationData;
+      }>(
+        client,
+        "/appScreenshots",
+        mapAppleScreenshotReservationPayload(
+          uploadTarget.screenshotSetId,
+          file.fileName,
+          fileStats.size,
+        ),
+      );
+      const screenshotId = response.data.id;
+      const uploadOperations = response.data.attributes?.uploadOperations;
+
+      if (screenshotId === undefined) {
+        throw new StoremetaError(
+          "API_ERROR",
+          `App Store Connect did not return an app screenshot id for ${uploadTarget.locale}/${uploadTarget.assetType}/${file.fileName}`,
+        );
+      }
+
+      if (uploadOperations === undefined || uploadOperations.length === 0) {
+        throw new StoremetaError(
+          "API_ERROR",
+          `App Store Connect did not return upload operations for ${uploadTarget.locale}/${uploadTarget.assetType}/${file.fileName}`,
+        );
+      }
+
+      reservations.push({
+        locale: uploadTarget.locale,
+        assetType: uploadTarget.assetType,
+        screenshotSetId: uploadTarget.screenshotSetId,
+        screenshotId,
+        file,
+        uploadOperations,
+      });
+    }
+  }
+
+  return reservations.sort((left, right) => {
+    const localeOrder = left.locale.localeCompare(right.locale);
+
+    if (localeOrder !== 0) {
+      return localeOrder;
+    }
+
+    const assetTypeOrder = left.assetType.localeCompare(right.assetType);
+
+    if (assetTypeOrder !== 0) {
+      return assetTypeOrder;
+    }
+
+    return left.file.position - right.file.position;
   });
 }
