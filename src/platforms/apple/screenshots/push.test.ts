@@ -8,6 +8,7 @@ import {
   clearAppleScreenshotUploadTargets,
   loadAppleScreenshotSets,
   reserveAppleScreenshotUploads,
+  uploadReservedAppleScreenshots,
   resolveOrCreateAppleScreenshotUploadTargets,
   resolveOrCreateAppleScreenshotLocalizations,
 } from "./push.js";
@@ -64,6 +65,7 @@ beforeEach(() => {
   postAppStoreConnectJsonMock.mockReset();
   requestAllAppStoreConnectPagesMock.mockReset();
   resolveEditableAppleAppStoreVersionResourceMock.mockReset();
+  vi.restoreAllMocks();
 });
 
 describe("loadAppleScreenshotSets", () => {
@@ -680,6 +682,158 @@ describe("reserveAppleScreenshotUploads", () => {
         ]),
       ).rejects.toThrow(
         /did not return upload operations for en-US\/APP_IPHONE_65\/1.png/,
+      );
+    } finally {
+      await rm(screenshotsBaseDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("uploadReservedAppleScreenshots", () => {
+  it("uploads Apple screenshot chunks using the reserved upload operations", async () => {
+    const screenshotsBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+    const screenshotPath = join(screenshotsBaseDir, "1.png");
+
+    await writeFile(screenshotPath, "abcdefghijkl");
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue({ ok: true } as Response);
+
+    try {
+      await expect(
+        uploadReservedAppleScreenshots([
+          {
+            locale: "en-US",
+            assetType: "APP_IPHONE_65",
+            screenshotSetId: "set-en-65",
+            screenshotId: "screenshot-en-1",
+            file: {
+              platform: "apple",
+              locale: "en-US",
+              assetType: "APP_IPHONE_65",
+              filePath: screenshotPath,
+              fileName: "1.png",
+              position: 1,
+            },
+            uploadOperations: [
+              {
+                method: "PUT",
+                url: "https://uploads.example.com/part-1",
+                offset: 0,
+                length: 5,
+                requestHeaders: [
+                  {
+                    name: "Content-Type",
+                    value: "image/png",
+                  },
+                ],
+              },
+              {
+                method: "PUT",
+                url: "https://uploads.example.com/part-2",
+                offset: 5,
+                length: 7,
+                requestHeaders: [
+                  {
+                    name: "Content-Type",
+                    value: "image/png",
+                  },
+                ],
+              },
+            ],
+          },
+        ]),
+      ).resolves.toEqual([
+        {
+          locale: "en-US",
+          assetType: "APP_IPHONE_65",
+          screenshotId: "screenshot-en-1",
+          filePath: screenshotPath,
+        },
+      ]);
+
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        1,
+        "https://uploads.example.com/part-1",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "image/png",
+          },
+          body: expect.any(ArrayBuffer),
+        },
+      );
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        "https://uploads.example.com/part-2",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "image/png",
+          },
+          body: expect.any(ArrayBuffer),
+        },
+      );
+      expect(
+        Buffer.from(
+          (fetchMock.mock.calls[0]?.[1] as RequestInit).body as ArrayBuffer,
+        ).toString("utf8"),
+      ).toBe("abcde");
+      expect(
+        Buffer.from(
+          (fetchMock.mock.calls[1]?.[1] as RequestInit).body as ArrayBuffer,
+        ).toString("utf8"),
+      ).toBe("fghijkl");
+    } finally {
+      await rm(screenshotsBaseDir, { recursive: true, force: true });
+    }
+  });
+
+  it("fails when Apple returns an unsuccessful upload response", async () => {
+    const screenshotsBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+    const screenshotPath = join(screenshotsBaseDir, "1.png");
+
+    await writeFile(screenshotPath, "abc");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+    } as Response);
+
+    try {
+      await expect(
+        uploadReservedAppleScreenshots([
+          {
+            locale: "en-US",
+            assetType: "APP_IPHONE_65",
+            screenshotSetId: "set-en-65",
+            screenshotId: "screenshot-en-1",
+            file: {
+              platform: "apple",
+              locale: "en-US",
+              assetType: "APP_IPHONE_65",
+              filePath: screenshotPath,
+              fileName: "1.png",
+              position: 1,
+            },
+            uploadOperations: [
+              {
+                method: "PUT",
+                url: "https://uploads.example.com/part-1",
+                offset: 0,
+                length: 3,
+                requestHeaders: [
+                  {
+                    name: "Content-Type",
+                    value: "image/png",
+                  },
+                ],
+              },
+            ],
+          },
+        ]),
+      ).rejects.toThrow(
+        /Apple screenshot upload failed for en-US\/APP_IPHONE_65\/1.png with 500 Internal Server Error/,
       );
     } finally {
       await rm(screenshotsBaseDir, { recursive: true, force: true });

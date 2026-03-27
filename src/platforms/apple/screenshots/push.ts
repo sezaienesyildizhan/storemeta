@@ -1,4 +1,4 @@
-import { readdir, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 
 import { StoremetaError } from "../../../cli/errors.js";
@@ -651,5 +651,129 @@ export async function reserveAppleScreenshotUploads(
     }
 
     return left.file.position - right.file.position;
+  });
+}
+
+function resolveAppleUploadOperationHeaders(
+  uploadOperation: AppleUploadOperation,
+): Record<string, string> {
+  const headers = Object.fromEntries(
+    (uploadOperation.requestHeaders ?? [])
+      .filter(
+        (
+          header,
+        ): header is {
+          name: string;
+          value: string;
+        } => header.name !== undefined && header.value !== undefined,
+      )
+      .map((header) => [header.name, header.value]),
+  );
+
+  if (Object.keys(headers).length === 0) {
+    throw new StoremetaError(
+      "API_ERROR",
+      "Apple upload operation did not return request headers",
+    );
+  }
+
+  return headers;
+}
+
+function sliceAppleUploadChunk(
+  fileBuffer: Buffer,
+  uploadOperation: AppleUploadOperation,
+): Buffer {
+  if (uploadOperation.offset === undefined || uploadOperation.length === undefined) {
+    throw new StoremetaError(
+      "API_ERROR",
+      "Apple upload operation did not return offset and length information",
+    );
+  }
+
+  return fileBuffer.subarray(
+    uploadOperation.offset,
+    uploadOperation.offset + uploadOperation.length,
+  );
+}
+
+function convertAppleUploadChunkToArrayBuffer(chunk: Buffer): ArrayBuffer {
+  return chunk.buffer.slice(
+    chunk.byteOffset,
+    chunk.byteOffset + chunk.byteLength,
+  ) as ArrayBuffer;
+}
+
+export interface AppleUploadedScreenshotResult {
+  locale: string;
+  assetType: string;
+  screenshotId: string;
+  filePath: string;
+}
+
+export async function uploadReservedAppleScreenshot(
+  reservation: AppleReservedScreenshotUpload,
+): Promise<AppleUploadedScreenshotResult> {
+  const fileBuffer = await readFile(reservation.file.filePath);
+
+  for (const uploadOperation of reservation.uploadOperations) {
+    if (
+      uploadOperation.method === undefined ||
+      uploadOperation.url === undefined ||
+      uploadOperation.url.trim().length === 0
+    ) {
+      throw new StoremetaError(
+        "API_ERROR",
+        `Apple upload operation is missing method or URL for ${reservation.locale}/${reservation.assetType}/${reservation.file.fileName}`,
+      );
+    }
+
+    const response = await fetch(uploadOperation.url, {
+      method: uploadOperation.method,
+      headers: resolveAppleUploadOperationHeaders(uploadOperation),
+      body: convertAppleUploadChunkToArrayBuffer(
+        sliceAppleUploadChunk(fileBuffer, uploadOperation),
+      ),
+    });
+
+    if (!response.ok) {
+      throw new StoremetaError(
+        "API_ERROR",
+        `Apple screenshot upload failed for ${reservation.locale}/${reservation.assetType}/${reservation.file.fileName} with ${response.status} ${response.statusText}`,
+      );
+    }
+  }
+
+  return {
+    locale: reservation.locale,
+    assetType: reservation.assetType,
+    screenshotId: reservation.screenshotId,
+    filePath: reservation.file.filePath,
+  };
+}
+
+export async function uploadReservedAppleScreenshots(
+  reservations: AppleReservedScreenshotUpload[],
+): Promise<AppleUploadedScreenshotResult[]> {
+  const uploadResults: AppleUploadedScreenshotResult[] = [];
+
+  for (const reservation of reservations) {
+    uploadResults.push(await uploadReservedAppleScreenshot(reservation));
+  }
+
+  return uploadResults.sort((left, right) => {
+    const localeOrder = left.locale.localeCompare(right.locale);
+
+    if (localeOrder !== 0) {
+      return localeOrder;
+    }
+
+    const assetTypeOrder = left.assetType.localeCompare(right.assetType);
+
+    if (assetTypeOrder !== 0) {
+      return assetTypeOrder;
+    }
+
+    return left.filePath.localeCompare(right.filePath);
   });
 }
