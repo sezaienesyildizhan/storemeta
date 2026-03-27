@@ -3,4 +3,9 @@ node_modules/
 dist/
 .env
 .env.*
+secrets/
+.secrets/
+*.p8
+*.pem
+*.key
 reference/
