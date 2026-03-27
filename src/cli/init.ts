@@ -1,6 +1,7 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { access, mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
+import { StoremetaError } from "./errors.js";
 import { DEFAULT_CONFIG_FILE } from "../config/load-config.js";
 
 export function renderStarterConfig(): string {
@@ -39,6 +40,24 @@ apps:
 export async function runInitCommand(configPath?: string): Promise<string> {
   const resolvedPath = resolve(configPath ?? DEFAULT_CONFIG_FILE);
   const projectRoot = dirname(resolvedPath);
+
+  try {
+    await access(resolvedPath);
+    throw new StoremetaError(
+      "FILESYSTEM_ERROR",
+      `Refusing to overwrite existing config file at ${resolvedPath}`,
+    );
+  } catch (error) {
+    if (
+      error instanceof StoremetaError ||
+      (typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code !== "ENOENT")
+    ) {
+      throw error;
+    }
+  }
 
   await writeFile(resolvedPath, renderStarterConfig(), "utf8");
   await mkdir(join(projectRoot, "metadata", "apple"), { recursive: true });
