@@ -1,5 +1,5 @@
-import { writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 
 import { DEFAULT_CONFIG_FILE } from "../config/load-config.js";
 
@@ -38,8 +38,11 @@ apps:
 
 export async function runInitCommand(configPath?: string): Promise<string> {
   const resolvedPath = resolve(configPath ?? DEFAULT_CONFIG_FILE);
+  const projectRoot = dirname(resolvedPath);
 
   await writeFile(resolvedPath, renderStarterConfig(), "utf8");
+  await mkdir(join(projectRoot, "metadata", "apple"), { recursive: true });
+  await mkdir(join(projectRoot, "metadata", "google"), { recursive: true });
 
   return resolvedPath;
 }
