@@ -74,7 +74,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Implement Apple credential loading from environment variables.
 - [x] Implement Google credential loading from environment variables.
 - [x] Validate missing credential cases with clear errors.
-- [ ] Ensure secrets never appear in logs.
+- [x] Ensure secrets never appear in logs.
 - [ ] Add helpers for resolved credential state without exposing secret values.
 
 ## 7. Metadata File Parsing
