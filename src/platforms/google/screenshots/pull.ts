@@ -169,6 +169,17 @@ export async function downloadGoogleScreenshotSet(
   screenshotsBaseDir: string,
   screenshotSet: GoogleScreenshotSet,
 ): Promise<ScreenshotSetDescriptor> {
+  const normalizedLocale = normalizeLocaleCode(screenshotSet.locale);
+
+  if (screenshotSet.images.length === 0) {
+    return {
+      platform: "google",
+      locale: normalizedLocale,
+      assetType: screenshotSet.imageType,
+      files: [],
+    };
+  }
+
   const files: ScreenshotDescriptor[] = [];
 
   for (const [index, image] of screenshotSet.images.entries()) {
@@ -199,7 +210,7 @@ export async function downloadGoogleScreenshotSet(
 
     files.push({
       platform: "google",
-      locale: normalizeLocaleCode(screenshotSet.locale),
+      locale: normalizedLocale,
       assetType: screenshotSet.imageType,
       filePath,
       fileName,
@@ -209,7 +220,7 @@ export async function downloadGoogleScreenshotSet(
 
   return {
     platform: "google",
-    locale: normalizeLocaleCode(screenshotSet.locale),
+    locale: normalizedLocale,
     assetType: screenshotSet.imageType,
     files,
   };

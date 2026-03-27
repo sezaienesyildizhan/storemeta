@@ -163,7 +163,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Download remote screenshots into the canonical local directory layout.
 - [x] Write deterministic filenames such as `1.png`, `2.png`, `3.png`.
 - [x] Support configured screenshot groups where relevant.
-- [ ] Handle empty sets cleanly.
+- [x] Handle empty sets cleanly.
 
 ## 17. Google Screenshots Push
 

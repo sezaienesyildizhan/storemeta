@@ -133,6 +133,33 @@ describe("expandGoogleScreenshotPullLocales", () => {
 });
 
 describe("downloadGoogleScreenshotSet", () => {
+  it("returns an empty screenshot set without downloading or writing files", async () => {
+    const screenshotsBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+    const fetchMock = vi.fn();
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      await expect(
+        downloadGoogleScreenshotSet(screenshotsBaseDir, {
+          locale: "en_us",
+          imageType: "phoneScreenshots",
+          images: [],
+        }),
+      ).resolves.toEqual({
+        platform: "google",
+        locale: "en-US",
+        assetType: "phoneScreenshots",
+        files: [],
+      });
+
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+      await rm(screenshotsBaseDir, { recursive: true, force: true });
+    }
+  });
+
   it("writes screenshots into the canonical google locale and asset-type layout", async () => {
     const screenshotsBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
 
