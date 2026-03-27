@@ -23,7 +23,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 2. Tooling And Dependency Setup
 
-- [ ] Choose the CLI framework or parser.
+- [x] Choose the CLI framework or parser.
 - [ ] Add TypeScript runtime and build dependencies.
 - [ ] Add a YAML parser.
 - [ ] Add an HTTP client strategy.

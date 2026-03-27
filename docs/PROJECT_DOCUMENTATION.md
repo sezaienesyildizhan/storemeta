@@ -141,6 +141,9 @@ Recommended internal modules:
 - `platforms/google/metadata`
 - `platforms/google/screenshots`
 
+Initial tooling choices:
+- CLI parser: `commander`
+
 High-level design:
 - one unified CLI surface
 - one root config file
