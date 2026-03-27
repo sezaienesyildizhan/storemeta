@@ -91,7 +91,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 - [x] Implement locale normalization utilities.
 - [x] Implement explicit per-platform locale mapping support.
-- [ ] Implement screenshot grouping support from config.
+- [x] Implement screenshot grouping support from config.
 - [ ] Validate that locale groups resolve deterministically.
 - [ ] Add tests for locale edge cases such as `zh-Hans`, `zh-Hant`, `he-IL`, and grouped English locales.
 
