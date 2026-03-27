@@ -28,7 +28,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add a YAML parser.
 - [x] Add an HTTP client strategy.
 - [x] Add a schema validation library for config and metadata validation.
-- [ ] Add test tooling.
+- [x] Add test tooling.
 - [ ] Add linting and formatting tooling if desired.
 
 ## 3. Source Structure

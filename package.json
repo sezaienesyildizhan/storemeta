@@ -17,7 +17,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "check": "tsc --noEmit -p tsconfig.json"
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
   },
   "repository": {
     "type": "git",
@@ -36,7 +37,8 @@
   ],
   "devDependencies": {
     "@types/node": "^25.5.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   },
   "dependencies": {
     "yaml": "^2.8.3",
