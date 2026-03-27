@@ -129,14 +129,14 @@ describe("downloadGoogleScreenshotSet", () => {
       });
 
       expect(result.files).toHaveLength(1);
-      expect(result.files[0]?.fileName).toBe("image-1.png");
+      expect(result.files[0]?.fileName).toBe("1.png");
       expect(result.files[0]?.filePath).toBe(
         join(
           screenshotsBaseDir,
           "google",
           "en-US",
           "phoneScreenshots",
-          "image-1.png",
+          "1.png",
         ),
       );
       await expect(readFile(result.files[0]!.filePath, "utf8")).resolves.toBe(

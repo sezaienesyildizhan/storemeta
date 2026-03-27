@@ -96,7 +96,7 @@ function createGoogleDownloadedFileName(
   position: number,
   extension: string,
 ): string {
-  return `image-${position}.${normalizeGoogleImageExtension(extension)}`;
+  return `${position}.${normalizeGoogleImageExtension(extension)}`;
 }
 
 export async function downloadGoogleImage(
