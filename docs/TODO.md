@@ -154,7 +154,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Load and validate local Google metadata files.
 - [x] Map local metadata into Google API payloads.
 - [x] Upload listing text through an edit session.
-- [ ] Support `--dry-run`.
+- [x] Support `--dry-run`.
 - [ ] Print per-locale progress and final results.
 
 ## 16. Google Screenshots Pull

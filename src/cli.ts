@@ -4,6 +4,7 @@ import { Command, Option } from "commander";
 
 import { runInitCommand } from "./cli/init.js";
 import { runMetadataPullCommand } from "./cli/metadata-pull.js";
+import { runMetadataPushCommand } from "./cli/metadata-push.js";
 import { renderCommandError, renderCommandSummary } from "./cli/render.js";
 import { runValidateCommand } from "./cli/validate.js";
 
@@ -31,6 +32,9 @@ export function buildCliProgram(): Command {
     .option("--locale <code>", "Target locale code")
     .option("--dry-run", "Preview changes without applying them")
     .option("--verbose", "Enable verbose output");
+  const metadataCommand = program
+    .command("metadata")
+    .description("Metadata commands");
 
   program
     .command("init")
@@ -53,9 +57,7 @@ export function buildCliProgram(): Command {
       console.log(renderCommandSummary(summary));
     });
 
-  program
-    .command("metadata")
-    .description("Metadata commands")
+  metadataCommand
     .command("pull")
     .description("Pull remote metadata into the local project")
     .action(async () => {
@@ -65,6 +67,20 @@ export function buildCliProgram(): Command {
         app: options.app,
         locale: options.locale,
         platform: options.platform,
+      });
+    });
+
+  metadataCommand
+    .command("push")
+    .description("Push local metadata to the store")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      await runMetadataPushCommand({
+        config: options.config,
+        app: options.app,
+        platform: options.platform,
+        locale: options.locale,
+        dryRun: options.dryRun,
       });
     });
 
