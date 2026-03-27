@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   fetchAppleScreenshotLocalizations,
+  fetchAppleScreenshotsForSets,
   fetchAppleScreenshotSetsForLocalizations,
 } from "./pull.js";
 import type { AppStoreConnectClient } from "../client.js";
@@ -31,6 +32,11 @@ vi.mock("../metadata/pull.js", async () => {
     fetchAppleAppStoreVersionLocalizations:
       fetchAppleAppStoreVersionLocalizationsMock,
   };
+});
+
+beforeEach(() => {
+  fetchAppleAppStoreVersionLocalizationsMock.mockReset();
+  requestAllAppStoreConnectPagesMock.mockReset();
 });
 
 describe("fetchAppleScreenshotLocalizations", () => {
@@ -145,6 +151,115 @@ describe("fetchAppleScreenshotSetsForLocalizations", () => {
       2,
       client,
       "/appStoreVersionLocalizations/version-loc-en/appScreenshotSets",
+    );
+  });
+});
+
+describe("fetchAppleScreenshotsForSets", () => {
+  it("fetches screenshots for each Apple screenshot set", async () => {
+    requestAllAppStoreConnectPagesMock
+      .mockResolvedValueOnce([
+        {
+          id: "screenshot-en-1",
+          type: "appScreenshots",
+          attributes: {
+            fileName: "en-1.png",
+          },
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: "screenshot-tr-1",
+          type: "appScreenshots",
+          attributes: {
+            fileName: "tr-1.png",
+          },
+        },
+      ]);
+
+    const client = {} as AppStoreConnectClient;
+
+    await expect(
+      fetchAppleScreenshotsForSets(client, [
+        {
+          localizationId: "version-loc-tr",
+          locale: "tr",
+          screenshotSets: [
+            {
+              id: "set-tr",
+              type: "appScreenshotSets",
+              attributes: {
+                screenshotDisplayType: "APP_IPHONE_65",
+              },
+            },
+          ],
+        },
+        {
+          localizationId: "version-loc-en",
+          locale: "en-US",
+          screenshotSets: [
+            {
+              id: "set-en",
+              type: "appScreenshotSets",
+              attributes: {
+                screenshotDisplayType: "APP_IPHONE_65",
+              },
+            },
+          ],
+        },
+      ]),
+    ).resolves.toEqual([
+      {
+        localizationId: "version-loc-en",
+        locale: "en-US",
+        screenshotSet: {
+          id: "set-en",
+          type: "appScreenshotSets",
+          attributes: {
+            screenshotDisplayType: "APP_IPHONE_65",
+          },
+        },
+        screenshots: [
+          {
+            id: "screenshot-tr-1",
+            type: "appScreenshots",
+            attributes: {
+              fileName: "tr-1.png",
+            },
+          },
+        ],
+      },
+      {
+        localizationId: "version-loc-tr",
+        locale: "tr",
+        screenshotSet: {
+          id: "set-tr",
+          type: "appScreenshotSets",
+          attributes: {
+            screenshotDisplayType: "APP_IPHONE_65",
+          },
+        },
+        screenshots: [
+          {
+            id: "screenshot-en-1",
+            type: "appScreenshots",
+            attributes: {
+              fileName: "en-1.png",
+            },
+          },
+        ],
+      },
+    ]);
+
+    expect(requestAllAppStoreConnectPagesMock).toHaveBeenNthCalledWith(
+      1,
+      client,
+      "/appScreenshotSets/set-tr/appScreenshots",
+    );
+    expect(requestAllAppStoreConnectPagesMock).toHaveBeenNthCalledWith(
+      2,
+      client,
+      "/appScreenshotSets/set-en/appScreenshots",
     );
   });
 });

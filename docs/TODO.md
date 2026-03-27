@@ -207,7 +207,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 - [x] Fetch localization resources for the target version.
 - [x] Fetch screenshot sets per localization.
-- [ ] Fetch screenshots within each set.
+- [x] Fetch screenshots within each set.
 - [ ] Download screenshot binaries into the canonical local directory layout.
 - [ ] Preserve deterministic ordering.
 - [ ] Support locale filtering.

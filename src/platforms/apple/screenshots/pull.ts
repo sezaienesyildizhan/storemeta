@@ -28,6 +28,27 @@ export interface AppleLocalizationScreenshotSets {
   screenshotSets: AppleScreenshotSetData[];
 }
 
+export interface AppleScreenshotAttributes {
+  fileName?: string;
+  assetDeliveryState?: {
+    state?: string;
+  };
+  sourceFileChecksum?: string;
+}
+
+export interface AppleScreenshotData {
+  id: string;
+  type: "appScreenshots";
+  attributes?: AppleScreenshotAttributes;
+}
+
+export interface AppleScreenshotSetWithScreenshots {
+  localizationId: string;
+  locale?: string;
+  screenshotSet: AppleScreenshotSetData;
+  screenshots: AppleScreenshotData[];
+}
+
 export async function fetchAppleScreenshotSetsForLocalizations(
   client: AppStoreConnectClient,
   localizations: AppleAppStoreVersionLocalizationData[],
@@ -56,4 +77,39 @@ export async function fetchAppleScreenshotSetsForLocalizations(
       right.locale ?? right.localizationId,
     ),
   );
+}
+
+export async function fetchAppleScreenshotsForSets(
+  client: AppStoreConnectClient,
+  screenshotSetsByLocalization: AppleLocalizationScreenshotSets[],
+): Promise<AppleScreenshotSetWithScreenshots[]> {
+  const results: AppleScreenshotSetWithScreenshots[] = [];
+
+  for (const localization of screenshotSetsByLocalization) {
+    for (const screenshotSet of localization.screenshotSets) {
+      const screenshots = await requestAllAppStoreConnectPages<AppleScreenshotData>(
+        client,
+        `/appScreenshotSets/${encodeURIComponent(screenshotSet.id)}/appScreenshots`,
+      );
+
+      results.push({
+        localizationId: localization.localizationId,
+        locale: localization.locale,
+        screenshotSet,
+        screenshots,
+      });
+    }
+  }
+
+  return results.sort((left, right) => {
+    const localeOrder = (left.locale ?? left.localizationId).localeCompare(
+      right.locale ?? right.localizationId,
+    );
+
+    if (localeOrder !== 0) {
+      return localeOrder;
+    }
+
+    return left.screenshotSet.id.localeCompare(right.screenshotSet.id);
+  });
 }
