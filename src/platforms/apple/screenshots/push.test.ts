@@ -2,9 +2,49 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { loadAppleScreenshotSets } from "./push.js";
+import {
+  loadAppleScreenshotSets,
+  resolveOrCreateAppleScreenshotLocalizations,
+} from "./push.js";
+import type { AppStoreConnectClient } from "../client.js";
+
+const {
+  postAppStoreConnectJsonMock,
+  requestAllAppStoreConnectPagesMock,
+  resolveEditableAppleAppStoreVersionResourceMock,
+} = vi.hoisted(() => ({
+  postAppStoreConnectJsonMock: vi.fn(),
+  requestAllAppStoreConnectPagesMock: vi.fn(),
+  resolveEditableAppleAppStoreVersionResourceMock: vi.fn(),
+}));
+
+vi.mock("../client.js", async () => {
+  const actual = await vi.importActual("../client.js");
+
+  return {
+    ...actual,
+    postAppStoreConnectJson: postAppStoreConnectJsonMock,
+    requestAllAppStoreConnectPages: requestAllAppStoreConnectPagesMock,
+  };
+});
+
+vi.mock("../metadata/push.js", async () => {
+  const actual = await vi.importActual("../metadata/push.js");
+
+  return {
+    ...actual,
+    resolveEditableAppleAppStoreVersionResource:
+      resolveEditableAppleAppStoreVersionResourceMock,
+  };
+});
+
+beforeEach(() => {
+  postAppStoreConnectJsonMock.mockReset();
+  requestAllAppStoreConnectPagesMock.mockReset();
+  resolveEditableAppleAppStoreVersionResourceMock.mockReset();
+});
 
 describe("loadAppleScreenshotSets", () => {
   it("loads Apple screenshot sets from the canonical local layout", async () => {
@@ -70,5 +110,126 @@ describe("loadAppleScreenshotSets", () => {
     } finally {
       await rm(screenshotsBaseDir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("resolveOrCreateAppleScreenshotLocalizations", () => {
+  it("creates only the missing Apple screenshot localizations", async () => {
+    resolveEditableAppleAppStoreVersionResourceMock.mockResolvedValueOnce({
+      id: "version-1",
+      type: "appStoreVersions",
+    });
+    requestAllAppStoreConnectPagesMock.mockResolvedValueOnce([
+      {
+        id: "version-loc-en",
+        type: "appStoreVersionLocalizations",
+        attributes: {
+          locale: "en-US",
+        },
+      },
+    ]);
+    postAppStoreConnectJsonMock.mockResolvedValueOnce({
+      data: {
+        id: "version-loc-tr",
+        type: "appStoreVersionLocalizations",
+        attributes: {
+          locale: "tr",
+        },
+      },
+    });
+
+    const client = {} as AppStoreConnectClient;
+
+    await expect(
+      resolveOrCreateAppleScreenshotLocalizations(client, "1234567890", [
+        {
+          platform: "apple",
+          locale: "tr",
+          assetType: "APP_IPHONE_65",
+          files: [],
+        },
+        {
+          platform: "apple",
+          locale: "en-US",
+          assetType: "APP_IPHONE_65",
+          files: [],
+        },
+      ]),
+    ).resolves.toEqual([
+      {
+        id: "version-loc-en",
+        type: "appStoreVersionLocalizations",
+        attributes: {
+          locale: "en-US",
+        },
+      },
+      {
+        id: "version-loc-tr",
+        type: "appStoreVersionLocalizations",
+        attributes: {
+          locale: "tr",
+        },
+      },
+    ]);
+
+    expect(resolveEditableAppleAppStoreVersionResourceMock).toHaveBeenCalledWith(
+      client,
+      "1234567890",
+    );
+    expect(requestAllAppStoreConnectPagesMock).toHaveBeenCalledWith(
+      client,
+      "/appStoreVersions/version-1/appStoreVersionLocalizations",
+    );
+    expect(postAppStoreConnectJsonMock).toHaveBeenCalledWith(
+      client,
+      "/appStoreVersionLocalizations",
+      {
+        data: {
+          type: "appStoreVersionLocalizations",
+          attributes: {
+            locale: "tr",
+          },
+          relationships: {
+            appStoreVersion: {
+              data: {
+                type: "appStoreVersions",
+                id: "version-1",
+              },
+            },
+          },
+        },
+      },
+    );
+  });
+
+  it("fails when Apple does not return an id for a created screenshot localization", async () => {
+    resolveEditableAppleAppStoreVersionResourceMock.mockResolvedValueOnce({
+      id: "version-1",
+      type: "appStoreVersions",
+    });
+    requestAllAppStoreConnectPagesMock.mockResolvedValueOnce([]);
+    postAppStoreConnectJsonMock.mockResolvedValueOnce({
+      data: {
+        type: "appStoreVersionLocalizations",
+        attributes: {
+          locale: "en-US",
+        },
+      },
+    });
+
+    const client = {} as AppStoreConnectClient;
+
+    await expect(
+      resolveOrCreateAppleScreenshotLocalizations(client, "1234567890", [
+        {
+          platform: "apple",
+          locale: "en-US",
+          assetType: "APP_IPHONE_65",
+          files: [],
+        },
+      ]),
+    ).rejects.toThrow(
+      /did not return an app store version localization id for locale en-US/,
+    );
   });
 });

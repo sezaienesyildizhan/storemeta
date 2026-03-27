@@ -7,6 +7,16 @@ import type {
   ScreenshotSetDescriptor,
 } from "../../../formats/screenshot-types.js";
 import { normalizeLocaleCode } from "../../../locales/normalize.js";
+import type { AppStoreConnectClient } from "../client.js";
+import {
+  postAppStoreConnectJson,
+  requestAllAppStoreConnectPages,
+} from "../client.js";
+import { resolveEditableAppleAppStoreVersionResource } from "../metadata/push.js";
+import type {
+  AppleAppStoreVersionLocalizationData,
+  AppleAppStoreVersionLocalizationPayload,
+} from "../metadata/types.js";
 
 const SUPPORTED_SCREENSHOT_EXTENSIONS = new Set([".png", ".jpg", ".jpeg"]);
 
@@ -152,5 +162,112 @@ export async function loadAppleScreenshotSets(
     }
 
     return left.assetType.localeCompare(right.assetType);
+  });
+}
+
+interface AppleAppStoreVersionLocalizationCreatePayload {
+  data: {
+    type: "appStoreVersionLocalizations";
+    attributes: {
+      locale: string;
+    };
+    relationships: {
+      appStoreVersion: {
+        data: {
+          type: "appStoreVersions";
+          id: string;
+        };
+      };
+    };
+  };
+}
+
+function mapAppleScreenshotLocaleToCreatePayload(
+  locale: string,
+  appStoreVersionId: string,
+): AppleAppStoreVersionLocalizationCreatePayload {
+  return {
+    data: {
+      type: "appStoreVersionLocalizations",
+      attributes: {
+        locale,
+      },
+      relationships: {
+        appStoreVersion: {
+          data: {
+            type: "appStoreVersions",
+            id: appStoreVersionId,
+          },
+        },
+      },
+    },
+  };
+}
+
+async function listAppleAppStoreVersionLocalizations(
+  client: AppStoreConnectClient,
+  appStoreVersionId: string,
+): Promise<AppleAppStoreVersionLocalizationData[]> {
+  return requestAllAppStoreConnectPages<AppleAppStoreVersionLocalizationData>(
+    client,
+    `/appStoreVersions/${encodeURIComponent(appStoreVersionId)}/appStoreVersionLocalizations`,
+  );
+}
+
+export async function resolveOrCreateAppleScreenshotLocalizations(
+  client: AppStoreConnectClient,
+  appId: string,
+  screenshotSets: ScreenshotSetDescriptor[],
+): Promise<AppleAppStoreVersionLocalizationData[]> {
+  const appStoreVersion = await resolveEditableAppleAppStoreVersionResource(
+    client,
+    appId,
+  );
+  const existingLocalizations = await listAppleAppStoreVersionLocalizations(
+    client,
+    appStoreVersion.id,
+  );
+  const localizationsByLocale = new Map(
+    existingLocalizations
+      .filter((localization) => localization.attributes.locale !== undefined)
+      .map((localization) => [localization.attributes.locale!, localization] as const),
+  );
+  const requiredLocales = [...new Set(screenshotSets.map((set) => set.locale))].sort(
+    (left, right) => left.localeCompare(right),
+  );
+
+  for (const locale of requiredLocales) {
+    if (localizationsByLocale.has(locale)) {
+      continue;
+    }
+
+    const response =
+      await postAppStoreConnectJson<AppleAppStoreVersionLocalizationPayload>(
+        client,
+        "/appStoreVersionLocalizations",
+        mapAppleScreenshotLocaleToCreatePayload(locale, appStoreVersion.id),
+      );
+
+    if (response.data.id === undefined) {
+      throw new StoremetaError(
+        "API_ERROR",
+        `App Store Connect did not return an app store version localization id for locale ${locale}`,
+      );
+    }
+
+    localizationsByLocale.set(locale, response.data);
+  }
+
+  return requiredLocales.map((locale) => {
+    const localization = localizationsByLocale.get(locale);
+
+    if (localization === undefined) {
+      throw new StoremetaError(
+        "API_ERROR",
+        `App Store Connect did not return an app store version localization for locale ${locale}`,
+      );
+    }
+
+    return localization;
   });
 }
