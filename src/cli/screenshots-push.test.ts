@@ -155,4 +155,168 @@ describe("runScreenshotsPushCommand", () => {
     expect(uploadReservedAppleScreenshotsMock).not.toHaveBeenCalled();
     expect(commitAppleScreenshotUploadsMock).not.toHaveBeenCalled();
   });
+
+  it("prints per-locale Apple screenshot upload progress", async () => {
+    loadConfigFileMock.mockResolvedValueOnce({
+      path: "/tmp/storemeta.yml",
+      parsed: {},
+    });
+    validateRootConfigMock.mockReturnValueOnce({
+      project: {
+        name: "Storemeta",
+        defaultApp: "demo",
+      },
+      apps: {},
+    });
+    selectConfiguredAppMock.mockReturnValueOnce({
+      id: "demo",
+      settings: {
+        screenshots: {
+          baseDir: "screenshots",
+        },
+        apple: {
+          appId: "1234567890",
+          credentials: {
+            issuerIdEnv: "APPLE_ISSUER_ID",
+            keyIdEnv: "APPLE_KEY_ID",
+            privateKeyPathEnv: "APPLE_PRIVATE_KEY_PATH",
+          },
+        },
+      },
+    });
+    resolveSelectedPlatformsMock.mockReturnValueOnce(["apple"]);
+    loadAppleScreenshotSetsMock.mockResolvedValueOnce([
+      {
+        platform: "apple",
+        locale: "en-US",
+        assetType: "APP_IPHONE_65",
+        files: [
+          {
+            platform: "apple",
+            locale: "en-US",
+            assetType: "APP_IPHONE_65",
+            filePath: "/tmp/screenshots/apple/en-US/APP_IPHONE_65/1.png",
+            fileName: "1.png",
+            position: 1,
+          },
+        ],
+      },
+    ]);
+    createAppStoreConnectClientMock.mockReturnValueOnce({ id: "apple-client" });
+    resolveOrCreateAppleScreenshotLocalizationsMock.mockResolvedValueOnce([
+      {
+        id: "version-loc-en",
+        type: "appStoreVersionLocalizations",
+        attributes: {
+          locale: "en-US",
+        },
+      },
+    ]);
+    resolveOrCreateAppleScreenshotUploadTargetsMock.mockResolvedValueOnce([
+      {
+        platform: "apple",
+        locale: "en-US",
+        assetType: "APP_IPHONE_65",
+        files: [
+          {
+            platform: "apple",
+            locale: "en-US",
+            assetType: "APP_IPHONE_65",
+            filePath: "/tmp/screenshots/apple/en-US/APP_IPHONE_65/1.png",
+            fileName: "1.png",
+            position: 1,
+          },
+        ],
+        localizationId: "version-loc-en",
+        screenshotSetId: "set-en-65",
+      },
+    ]);
+    reserveAppleScreenshotUploadsMock.mockResolvedValueOnce([
+      {
+        locale: "en-US",
+        assetType: "APP_IPHONE_65",
+        screenshotSetId: "set-en-65",
+        screenshotId: "screenshot-en-1",
+        file: {
+          platform: "apple",
+          locale: "en-US",
+          assetType: "APP_IPHONE_65",
+          filePath: "/tmp/screenshots/apple/en-US/APP_IPHONE_65/1.png",
+          fileName: "1.png",
+          position: 1,
+        },
+        uploadOperations: [],
+      },
+    ]);
+    uploadReservedAppleScreenshotsMock.mockResolvedValueOnce([
+      {
+        locale: "en-US",
+        assetType: "APP_IPHONE_65",
+        screenshotId: "screenshot-en-1",
+        filePath: "/tmp/screenshots/apple/en-US/APP_IPHONE_65/1.png",
+      },
+    ]);
+    commitAppleScreenshotUploadsMock.mockResolvedValueOnce([
+      {
+        locale: "en-US",
+        assetType: "APP_IPHONE_65",
+        screenshotId: "screenshot-en-1",
+        filePath: "/tmp/screenshots/apple/en-US/APP_IPHONE_65/1.png",
+        sourceFileChecksum: "checksum",
+      },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await expect(
+      runScreenshotsPushCommand({
+        config: "storemeta.yml",
+        app: "demo",
+        platform: "apple",
+        dryRun: false,
+      }),
+    ).resolves.toEqual({
+      status: "success",
+      successCount: 1,
+      failureCount: 0,
+      skippedCount: 0,
+      results: [
+        {
+          target: "apple/en-US/APP_IPHONE_65",
+          success: true,
+          message: "Uploaded 1 screenshots",
+        },
+      ],
+    });
+
+    expect(logSpy).toHaveBeenNthCalledWith(
+      1,
+      "Uploading apple screenshots en-US/APP_IPHONE_65 (1 files)",
+    );
+    expect(logSpy).toHaveBeenNthCalledWith(
+      2,
+      "Uploaded apple screenshots en-US/APP_IPHONE_65 (1 files)",
+    );
+    expect(reserveAppleScreenshotUploadsMock).toHaveBeenCalledWith(
+      { id: "apple-client" },
+      [
+        {
+          platform: "apple",
+          locale: "en-US",
+          assetType: "APP_IPHONE_65",
+          files: [
+            {
+              platform: "apple",
+              locale: "en-US",
+              assetType: "APP_IPHONE_65",
+              filePath: "/tmp/screenshots/apple/en-US/APP_IPHONE_65/1.png",
+              fileName: "1.png",
+              position: 1,
+            },
+          ],
+          localizationId: "version-loc-en",
+          screenshotSetId: "set-en-65",
+        },
+      ],
+    );
+  });
 });

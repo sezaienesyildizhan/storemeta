@@ -96,10 +96,21 @@ export async function runScreenshotsPushCommand(
         localizations,
         screenshotSets,
       );
-      const reservations = await reserveAppleScreenshotUploads(client, uploadTargets);
 
-      await uploadReservedAppleScreenshots(reservations);
-      await commitAppleScreenshotUploads(client, reservations);
+      for (const uploadTarget of uploadTargets) {
+        console.log(
+          `Uploading apple screenshots ${uploadTarget.locale}/${uploadTarget.assetType} (${uploadTarget.files.length} files)`,
+        );
+
+        const reservations = await reserveAppleScreenshotUploads(client, [uploadTarget]);
+
+        await uploadReservedAppleScreenshots(reservations);
+        await commitAppleScreenshotUploads(client, reservations);
+
+        console.log(
+          `Uploaded apple screenshots ${uploadTarget.locale}/${uploadTarget.assetType} (${uploadTarget.files.length} files)`,
+        );
+      }
       continue;
     }
 
