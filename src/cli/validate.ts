@@ -6,6 +6,7 @@ import { validateRootConfig } from "../config/schema.js";
 import { selectConfiguredApp } from "../config/select-app.js";
 import { resolveSelectedPlatforms } from "../config/select-platforms.js";
 import { validateMetadataFiles } from "../validation/metadata/files.js";
+import { validateScreenshotFolderStructure } from "../validation/screenshots/folders.js";
 
 export async function runValidateCommand(
   options: Pick<GlobalOptions, "config" | "app" | "platform">,
@@ -26,4 +27,5 @@ export async function runValidateCommand(
   }
 
   await validateMetadataFiles(loadedConfig.path, app, platforms);
+  await validateScreenshotFolderStructure(loadedConfig.path, app, platforms);
 }
