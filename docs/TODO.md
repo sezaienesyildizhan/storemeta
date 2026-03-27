@@ -89,7 +89,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 8. Locale System
 
-- [ ] Implement locale normalization utilities.
+- [x] Implement locale normalization utilities.
 - [ ] Implement explicit per-platform locale mapping support.
 - [ ] Implement screenshot grouping support from config.
 - [ ] Validate that locale groups resolve deterministically.
