@@ -106,7 +106,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 ## 10. CLI Shell
 
 - [x] Implement the `storemeta` entry point.
-- [ ] Implement global option parsing.
+- [x] Implement global option parsing.
 - [ ] Implement shared command context creation.
 - [ ] Implement shared summary and error rendering.
 - [ ] Implement `--verbose`.
