@@ -17,6 +17,10 @@ import type {
   AppleAppStoreVersionLocalizationData,
   AppleAppStoreVersionLocalizationPayload,
 } from "../metadata/types.js";
+import {
+  fetchAppleScreenshotSetsForLocalizations,
+  type AppleScreenshotSetData,
+} from "./pull.js";
 
 const SUPPORTED_SCREENSHOT_EXTENSIONS = new Set([".png", ".jpg", ".jpeg"]);
 
@@ -269,5 +273,145 @@ export async function resolveOrCreateAppleScreenshotLocalizations(
     }
 
     return localization;
+  });
+}
+
+interface AppleScreenshotSetCreatePayload {
+  data: {
+    type: "appScreenshotSets";
+    attributes: {
+      screenshotDisplayType: string;
+    };
+    relationships: {
+      appStoreVersionLocalization: {
+        data: {
+          type: "appStoreVersionLocalizations";
+          id: string;
+        };
+      };
+    };
+  };
+}
+
+function mapAppleScreenshotSetToCreatePayload(
+  localizationId: string,
+  screenshotDisplayType: string,
+): AppleScreenshotSetCreatePayload {
+  return {
+    data: {
+      type: "appScreenshotSets",
+      attributes: {
+        screenshotDisplayType,
+      },
+      relationships: {
+        appStoreVersionLocalization: {
+          data: {
+            type: "appStoreVersionLocalizations",
+            id: localizationId,
+          },
+        },
+      },
+    },
+  };
+}
+
+export interface AppleScreenshotUploadTarget extends ScreenshotSetDescriptor {
+  localizationId: string;
+  screenshotSetId: string;
+}
+
+export async function resolveOrCreateAppleScreenshotUploadTargets(
+  client: AppStoreConnectClient,
+  localizations: AppleAppStoreVersionLocalizationData[],
+  screenshotSets: ScreenshotSetDescriptor[],
+): Promise<AppleScreenshotUploadTarget[]> {
+  const localizationsByLocale = new Map(
+    localizations
+      .filter(
+        (
+          localization,
+        ): localization is AppleAppStoreVersionLocalizationData & {
+          id: string;
+          attributes: {
+            locale: string;
+          };
+        } =>
+          localization.id !== undefined &&
+          localization.attributes.locale !== undefined,
+      )
+      .map((localization) => [localization.attributes.locale, localization] as const),
+  );
+  const existingScreenshotSets = await fetchAppleScreenshotSetsForLocalizations(
+    client,
+    localizations,
+  );
+  const screenshotSetsByTargetKey = new Map<string, AppleScreenshotSetData>();
+
+  for (const localization of existingScreenshotSets) {
+    for (const screenshotSet of localization.screenshotSets) {
+      const displayType = screenshotSet.attributes?.screenshotDisplayType;
+
+      if (displayType === undefined) {
+        continue;
+      }
+
+      screenshotSetsByTargetKey.set(
+        `${localization.localizationId}:${displayType}`,
+        screenshotSet,
+      );
+    }
+  }
+
+  const uploadTargets: AppleScreenshotUploadTarget[] = [];
+
+  for (const screenshotSet of screenshotSets) {
+    const localization = localizationsByLocale.get(screenshotSet.locale);
+
+    if (localization === undefined) {
+      throw new StoremetaError(
+        "API_ERROR",
+        `App Store Connect did not return an app store version localization for locale ${screenshotSet.locale}`,
+      );
+    }
+
+    const targetKey = `${localization.id}:${screenshotSet.assetType}`;
+    let targetScreenshotSet = screenshotSetsByTargetKey.get(targetKey);
+
+    if (targetScreenshotSet === undefined) {
+      const response = await postAppStoreConnectJson<{ data: AppleScreenshotSetData }>(
+        client,
+        "/appScreenshotSets",
+        mapAppleScreenshotSetToCreatePayload(
+          localization.id,
+          screenshotSet.assetType,
+        ),
+      );
+
+      if (response.data.id === undefined) {
+        throw new StoremetaError(
+          "API_ERROR",
+          `App Store Connect did not return an app screenshot set id for locale ${screenshotSet.locale} and display type ${screenshotSet.assetType}`,
+        );
+      }
+
+      targetScreenshotSet = response.data;
+      screenshotSetsByTargetKey.set(targetKey, targetScreenshotSet);
+    }
+
+    uploadTargets.push({
+      ...screenshotSet,
+      localizationId: localization.id,
+      screenshotSetId: targetScreenshotSet.id,
+    });
+  }
+
+  return uploadTargets.sort((left, right) => {
+    const localeOrder = left.locale.localeCompare(right.locale);
+
+    if (localeOrder !== 0) {
+      return localeOrder;
+    }
+
+    return left.assetType.localeCompare(right.assetType);
   });
 }
