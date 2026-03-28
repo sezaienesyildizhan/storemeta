@@ -59,6 +59,7 @@ export async function runInitCommand(configPath?: string): Promise<string> {
     }
   }
 
+  await mkdir(projectRoot, { recursive: true });
   await writeFile(resolvedPath, renderStarterConfig(), "utf8");
   await mkdir(join(projectRoot, "metadata", "apple"), { recursive: true });
   await mkdir(join(projectRoot, "metadata", "google"), { recursive: true });
