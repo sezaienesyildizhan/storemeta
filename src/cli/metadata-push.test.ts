@@ -332,4 +332,72 @@ describe("runMetadataPushCommand", () => {
       ],
     );
   });
+
+  it("runs the Google metadata push flow through the mocked API helpers", async () => {
+    mockSharedConfig("google");
+    loadGoogleMetadataDocumentsMock.mockResolvedValueOnce([
+      {
+        locale: "tr",
+        title: "Storemeta Ornek",
+      },
+    ]);
+    mapGoogleMetadataDocumentsMock.mockReturnValueOnce([
+      {
+        language: "tr",
+        body: {
+          title: "Storemeta Ornek",
+        },
+      },
+    ]);
+    createGooglePlayClientMock.mockReturnValueOnce({ id: "google-client" });
+    withGoogleEditSessionMock.mockImplementationOnce(
+      async (_client, _packageName, callback) =>
+        callback({
+          id: "edit-1",
+        }),
+    );
+
+    await expect(
+      runMetadataPushCommand({
+        config: "storemeta.yml",
+        app: "demo",
+        platform: "google",
+        dryRun: false,
+      }),
+    ).resolves.toEqual({
+      status: "success",
+      successCount: 1,
+      failureCount: 0,
+      skippedCount: 0,
+      results: [
+        {
+          target: "google/tr",
+          success: true,
+          message: "Uploaded listing metadata",
+        },
+      ],
+    });
+
+    expect(withGoogleEditSessionMock).toHaveBeenCalledWith(
+      { id: "google-client" },
+      "com.example.demo",
+      expect.any(Function),
+    );
+    expect(uploadGoogleListingsMock).toHaveBeenCalledWith(
+      { id: "google-client" },
+      "com.example.demo",
+      "edit-1",
+      [
+        {
+          language: "tr",
+          body: {
+            title: "Storemeta Ornek",
+          },
+        },
+      ],
+      {
+        onUploaded: expect.any(Function),
+      },
+    );
+  });
 });

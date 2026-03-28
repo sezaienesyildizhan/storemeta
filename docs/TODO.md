@@ -249,7 +249,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add tests for dry-run behavior.
 - [x] Add command-level smoke tests.
 - [x] Add mocked API tests for Apple flows.
-- [ ] Add mocked API tests for Google flows.
+- [x] Add mocked API tests for Google flows.
 
 ## 26. Documentation Completion
 
