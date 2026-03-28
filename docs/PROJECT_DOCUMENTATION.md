@@ -511,6 +511,26 @@ Google:
 Possible later support:
 - `STORE_GOOGLE_SERVICE_ACCOUNT_JSON`
 
+### Auth Troubleshooting
+
+Apple:
+- confirm `STORE_APPLE_ISSUER_ID`, `STORE_APPLE_KEY_ID`, and `STORE_APPLE_PRIVATE_KEY_PATH` are set in the shell that runs `storemeta`
+- confirm the `.p8` file exists at `STORE_APPLE_PRIVATE_KEY_PATH`
+- confirm the key belongs to App Store Connect API access, not another Apple credential type
+- confirm the API key has access to the target app in App Store Connect
+- if the CLI reports a missing Apple credential env var, fix the env var name or shell export first before checking API behavior
+
+Google:
+- confirm `STORE_GOOGLE_SERVICE_ACCOUNT_PATH` points to a readable service account JSON file
+- confirm the service account has Play Console access to the target app
+- confirm the configured `packageName` matches the Play Console app exactly
+- if the CLI reports a missing Google credential env var, fix the env var export first before checking API behavior
+
+General:
+- run `storemeta validate` before any push command
+- keep credentials out of `storemeta.yml`
+- prefer absolute credential file paths in local environment exports to avoid path confusion across shells and CI jobs
+
 ### Validation Rules
 
 The config validator should enforce:
