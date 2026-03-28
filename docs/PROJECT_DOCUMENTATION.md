@@ -195,6 +195,13 @@ Purpose:
 Behavior:
 - do not overwrite existing files unless a future `--force` is added
 
+Examples:
+
+```bash
+storemeta init
+storemeta --config ./apps/demo/storemeta.yml init
+```
+
 ### `storemeta validate`
 
 Purpose:
@@ -211,6 +218,14 @@ Validation scope:
 Exit behavior:
 - exit `0` on success
 - exit non-zero when blocking issues exist
+
+Examples:
+
+```bash
+storemeta validate
+storemeta validate --platform apple
+storemeta validate --app example-app --platform all
+```
 
 ### `storemeta metadata pull`
 
@@ -275,6 +290,14 @@ Behavior:
 - respect `--dry-run`
 - replace existing screenshots in target sets unless a later flag adds merge behavior
 - print per-locale summaries
+
+Examples:
+
+```bash
+storemeta screenshots push --platform apple --dry-run
+storemeta screenshots push --platform apple --replace
+storemeta screenshots push --platform google --locale en-US
+```
 
 ### Output Rules
 
