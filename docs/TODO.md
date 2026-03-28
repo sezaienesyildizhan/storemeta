@@ -248,7 +248,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add unit tests for Google metadata mapping.
 - [x] Add tests for dry-run behavior.
 - [x] Add command-level smoke tests.
-- [ ] Add mocked API tests for Apple flows.
+- [x] Add mocked API tests for Apple flows.
 - [ ] Add mocked API tests for Google flows.
 
 ## 26. Documentation Completion

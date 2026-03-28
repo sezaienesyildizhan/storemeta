@@ -240,4 +240,96 @@ describe("runMetadataPushCommand", () => {
     expect(withGoogleEditSessionMock).not.toHaveBeenCalled();
     expect(uploadGoogleListingsMock).not.toHaveBeenCalled();
   });
+
+  it("runs the Apple metadata push flow through the mocked API helpers", async () => {
+    mockSharedConfig("apple");
+    loadAppleMetadataDocumentsMock.mockResolvedValueOnce([
+      {
+        locale: "en-US",
+        app_name: "Storemeta Example",
+      },
+    ]);
+    createAppStoreConnectClientMock.mockReturnValueOnce({ id: "apple-client" });
+    resolveAppleAppInfoResourceMock.mockResolvedValueOnce({ id: "app-info-1" });
+    resolveEditableAppleAppStoreVersionResourceMock.mockResolvedValueOnce({
+      id: "version-1",
+    });
+    updateExistingAppleAppInfoLocalizationsMock.mockResolvedValueOnce([]);
+    createMissingAppleAppInfoLocalizationsMock.mockResolvedValueOnce([]);
+    updateExistingAppleAppStoreVersionLocalizationsMock.mockResolvedValueOnce([]);
+    createMissingAppleAppStoreVersionLocalizationsMock.mockResolvedValueOnce([]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await expect(
+      runMetadataPushCommand({
+        config: "storemeta.yml",
+        app: "demo",
+        platform: "apple",
+        dryRun: false,
+      }),
+    ).resolves.toEqual({
+      status: "success",
+      successCount: 1,
+      failureCount: 0,
+      skippedCount: 0,
+      results: [
+        {
+          target: "apple/en-US",
+          success: true,
+          message: "Synced Apple metadata",
+        },
+      ],
+    });
+
+    expect(logSpy).toHaveBeenNthCalledWith(1, "Syncing apple metadata en-US");
+    expect(logSpy).toHaveBeenNthCalledWith(2, "Synced apple metadata en-US");
+    expect(resolveAppleAppInfoResourceMock).toHaveBeenCalledWith(
+      { id: "apple-client" },
+      "0000000000",
+    );
+    expect(resolveEditableAppleAppStoreVersionResourceMock).toHaveBeenCalledWith(
+      { id: "apple-client" },
+      "0000000000",
+    );
+    expect(updateExistingAppleAppInfoLocalizationsMock).toHaveBeenCalledWith(
+      { id: "apple-client" },
+      "app-info-1",
+      [
+        {
+          locale: "en-US",
+          app_name: "Storemeta Example",
+        },
+      ],
+    );
+    expect(createMissingAppleAppInfoLocalizationsMock).toHaveBeenCalledWith(
+      { id: "apple-client" },
+      "app-info-1",
+      [
+        {
+          locale: "en-US",
+          app_name: "Storemeta Example",
+        },
+      ],
+    );
+    expect(updateExistingAppleAppStoreVersionLocalizationsMock).toHaveBeenCalledWith(
+      { id: "apple-client" },
+      "version-1",
+      [
+        {
+          locale: "en-US",
+          app_name: "Storemeta Example",
+        },
+      ],
+    );
+    expect(createMissingAppleAppStoreVersionLocalizationsMock).toHaveBeenCalledWith(
+      { id: "apple-client" },
+      "version-1",
+      [
+        {
+          locale: "en-US",
+          app_name: "Storemeta Example",
+        },
+      ],
+    );
+  });
 });
