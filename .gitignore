@@ -2,6 +2,7 @@
 node_modules/
 dist/
 *.tgz
+.pack-test/
 .env
 .env.*
 secrets/
