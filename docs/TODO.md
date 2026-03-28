@@ -270,7 +270,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 ## 28. Pre-Release Verification
 
 - [x] Run `storemeta init` in a clean temp directory.
-- [ ] Run `storemeta validate` against the generated sample project.
+- [x] Run `storemeta validate` against the generated sample project.
 - [ ] Verify Apple metadata pull with a real test app.
 - [ ] Verify Apple metadata push with `--dry-run`.
 - [ ] Verify Google metadata pull with a real test app.
