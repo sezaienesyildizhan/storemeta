@@ -265,7 +265,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Confirm only intended files are included in the npm package.
 - [x] Verify `npm pack` contents locally.
 - [x] Verify the generated CLI works from the packed tarball.
-- [ ] Set initial version for the first release.
+- [x] Set initial version for the first release.
 
 ## 28. Pre-Release Verification
 
