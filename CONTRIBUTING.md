@@ -1,20 +1,41 @@
 # Contributing
 
-## Development
+## Prerequisites
 
-- Use Node.js 20 or newer.
-- Install dependencies with `npm install` once project dependencies are added.
-- Use the documented npm scripts as they become available during implementation.
+- Node.js 20 or newer
+- npm
 
-## Workflow
+## Local Setup
 
-- Make focused changes.
-- Keep commits small and descriptive.
-- Update documentation when behavior or configuration changes.
-- Add or update tests when behavior changes.
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run the core verification commands:
+
+```bash
+npm run check
+npm test
+npm run build
+```
+
+## Development Workflow
+
+Useful starting points:
+- use [`examples/storemeta.yml`](examples/storemeta.yml) for the config shape
+- use [`examples/`](examples) for safe sample metadata and screenshot layout
+- keep real credentials out of the repository and out of `examples/`
+
+When changing behavior:
+- update or add tests
+- update README and project docs when command behavior or config changes
+- keep commits focused and descriptive
 
 ## Security
 
-- Never commit secrets.
-- Never commit service account JSON files or private keys.
-- Use fake values in examples and fixtures.
+- never commit App Store Connect private keys
+- never commit Google service account JSON files
+- never commit real app metadata or production screenshots
+- keep example values fake and publish-safe

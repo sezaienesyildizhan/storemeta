@@ -257,7 +257,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add command examples for each implemented command.
 - [x] Add config examples that match the real implementation.
 - [x] Add troubleshooting guidance for Apple and Google auth setup.
-- [ ] Add contributor setup instructions.
+- [x] Add contributor setup instructions.
 
 ## 27. npm Packaging
 
