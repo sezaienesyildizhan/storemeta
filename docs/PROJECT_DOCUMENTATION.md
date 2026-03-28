@@ -354,17 +354,17 @@ Metadata content files may use:
 
 For `.md` files in v1, the file contents are parsed as YAML. Mixed markdown prose is out of scope for v1.
 
-### Proposed Root Shape
+### Implemented Root Shape
 
 ```yaml
 version: 1
 
 project:
-  name: my-app-store-project
-  defaultApp: my-app
+  name: example-project
+  defaultApp: example-app
 
 apps:
-  my-app:
+  example-app:
     metadata:
       baseDir: metadata
       format: yaml
@@ -372,7 +372,7 @@ apps:
       baseDir: screenshots
 
     apple:
-      appId: "1234567890"
+      appId: "0000000000"
       credentials:
         issuerIdEnv: STORE_APPLE_ISSUER_ID
         keyIdEnv: STORE_APPLE_KEY_ID
@@ -466,7 +466,7 @@ title: Example App
 short_description: Short description
 full_description: |
   Long description text.
-video: https://www.youtube.com/watch?v=example
+video: https://example.com/video
 ```
 
 ### Screenshot Layout
