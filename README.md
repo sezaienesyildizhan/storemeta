@@ -2,20 +2,61 @@
 
 `storemeta` is a TypeScript CLI for pulling, validating, and pushing App Store Connect and Google Play metadata and screenshots.
 
-The project defines a reusable open source CLI with a stable command surface, documented config, and npm-first distribution for App Store Connect and Google Play metadata workflows.
+## Install
+
+```bash
+npm install -g storemeta
+```
+
+Requirements:
+- Node.js 20+
+
+## Quick Start
+
+Create a starter project:
+
+```bash
+storemeta init
+```
+
+Validate local config, metadata, and screenshot layout:
+
+```bash
+storemeta validate
+```
+
+Pull metadata from one platform:
+
+```bash
+storemeta metadata pull --platform apple
+storemeta metadata pull --platform google --locale en-US
+```
+
+Push local metadata or screenshots:
+
+```bash
+storemeta metadata push --platform google --dry-run
+storemeta screenshots push --platform apple --replace
+```
+
+## Implemented Commands
+
+- `storemeta init`
+- `storemeta validate`
+- `storemeta metadata pull`
+- `storemeta metadata push`
+- `storemeta screenshots push`
+
+## Example Project
+
+A safe, fake sample project lives under [`examples/`](examples).
 
 ## Documentation
 
-The canonical merged documentation is here:
+The full project and config documentation is here:
 
 - [PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md)
 
-Related supporting file:
+Security notes:
 
 - [SECURITY.md](SECURITY.md)
-
-## Status
-
-Documentation-first planning stage.
-
-Implementation has not started yet. The project spec, CLI shape, config design, validation rules, release plan, and security requirements are documented in [PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md).

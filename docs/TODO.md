@@ -253,7 +253,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 26. Documentation Completion
 
-- [ ] Update `README.md` with install and usage examples once the CLI exists.
+- [x] Update `README.md` with install and usage examples once the CLI exists.
 - [ ] Add command examples for each implemented command.
 - [ ] Add config examples that match the real implementation.
 - [ ] Add troubleshooting guidance for Apple and Google auth setup.
