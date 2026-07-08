@@ -1,7 +1,7 @@
 {
   "name": "storemeta",
   "version": "0.1.0",
-  "description": "CLI for pulling, validating, and pushing App Store Connect and Google Play metadata and screenshots.",
+  "description": "Store App Store Connect and Google Play metadata and screenshots as code.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -35,10 +35,16 @@
   },
   "keywords": [
     "cli",
+    "app-store",
     "app-store-connect",
+    "android-publisher",
     "google-play",
+    "ios",
+    "android",
     "metadata",
-    "screenshots"
+    "screenshots",
+    "release-automation",
+    "store-listing"
   ],
   "devDependencies": {
     "@types/node": "^25.5.0",
