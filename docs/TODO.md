@@ -301,8 +301,8 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 ## 29. First Public Release
 
-- [ ] Commit the implementation.
-- [ ] Push to GitHub.
+- [x] Commit the implementation.
+- [x] Push to GitHub.
 - [ ] Publish the initial npm package.
 - [ ] Tag the release.
-- [ ] Confirm the public repository contains no ignored or secret material.
+- [x] Confirm the public repository contains no ignored or secret material.
