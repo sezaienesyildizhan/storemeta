@@ -2,11 +2,18 @@
 
 import { Command, Option } from "commander";
 
+import { runAuthCheckCommand } from "./cli/auth-check.js";
+import { runConfigDoctorCommand } from "./cli/config-doctor.js";
 import { runInitCommand } from "./cli/init.js";
 import { applyCommandSummaryExitCode } from "./cli/exit-code.js";
+import { runLocalesListCommand } from "./cli/locales-list.js";
+import { runMetadataDiffCommand } from "./cli/metadata-diff.js";
 import { runMetadataPullCommand } from "./cli/metadata-pull.js";
 import { runMetadataPushCommand } from "./cli/metadata-push.js";
 import { renderCommandError, renderCommandSummary } from "./cli/render.js";
+import { runScaffoldCommand } from "./cli/scaffold.js";
+import { runScreenshotsDiffCommand } from "./cli/screenshots-diff.js";
+import { runScreenshotsPullCommand } from "./cli/screenshots-pull.js";
 import { runScreenshotsPushCommand } from "./cli/screenshots-push.js";
 import { runValidateCommand } from "./cli/validate.js";
 
@@ -45,13 +52,47 @@ export function buildCliProgram(): Command {
   const screenshotsCommand = program
     .command("screenshots")
     .description("Screenshot commands");
+  const authCommand = program.command("auth").description("Auth commands");
+  const configCommand = program.command("config").description("Config commands");
+  const localesCommand = program.command("locales").description("Locale commands");
 
   program
     .command("init")
     .description("Create a starter storemeta config")
     .action(async () => {
       const options = program.opts<GlobalOptions>();
-      await runInitCommand(options.config);
+      const configPath = await runInitCommand(options.config);
+      const summary = await runScaffoldCommand({
+        config: configPath,
+        app: options.app,
+        platform: options.platform,
+      });
+      console.log(
+        [
+          "Created starter storemeta project.",
+          "Next steps:",
+          "1. Fill app identifiers in storemeta.yml.",
+          "2. Create Apple App Store Connect API credentials and Google Play service account credentials.",
+          "3. Export the credential environment variables named in storemeta.yml.",
+          "4. Run storemeta auth check, then storemeta validate.",
+          "See docs/AUTH_SETUP.md for credential setup.",
+        ].join("\n"),
+      );
+      console.log(renderCommandSummary(summary));
+    });
+
+  program
+    .command("scaffold")
+    .description("Create missing metadata files and screenshot folders from config")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      const summary = await runScaffoldCommand({
+        config: options.config,
+        app: options.app,
+        platform: options.platform,
+      });
+      console.log(renderCommandSummary(summary));
+      applyCommandSummaryExitCode(summary);
     });
 
   program
@@ -92,6 +133,91 @@ export function buildCliProgram(): Command {
         platform: options.platform,
         locale: options.locale,
         dryRun: options.dryRun,
+      });
+      console.log(renderCommandSummary(summary));
+      applyCommandSummaryExitCode(summary);
+    });
+
+  metadataCommand
+    .command("diff")
+    .description("Compare configured metadata locales with local metadata files")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      const summary = await runMetadataDiffCommand({
+        config: options.config,
+        app: options.app,
+        platform: options.platform,
+      });
+      console.log(renderCommandSummary(summary));
+      applyCommandSummaryExitCode(summary);
+    });
+
+  authCommand
+    .command("check")
+    .description("Check configured credential environment variables")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      const summary = await runAuthCheckCommand({
+        config: options.config,
+        app: options.app,
+        platform: options.platform,
+      });
+      console.log(renderCommandSummary(summary));
+      applyCommandSummaryExitCode(summary);
+    });
+
+  configCommand
+    .command("doctor")
+    .description("Inspect resolved config, app, directories, and platforms")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      const summary = await runConfigDoctorCommand({
+        config: options.config,
+        app: options.app,
+        platform: options.platform,
+      });
+      console.log(renderCommandSummary(summary));
+      applyCommandSummaryExitCode(summary);
+    });
+
+  localesCommand
+    .command("list")
+    .description("List configured default locales")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      const summary = await runLocalesListCommand({
+        config: options.config,
+        app: options.app,
+        platform: options.platform,
+      });
+      console.log(renderCommandSummary(summary));
+      applyCommandSummaryExitCode(summary);
+    });
+
+  screenshotsCommand
+    .command("pull")
+    .description("Pull remote screenshots into the local project")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      const summary = await runScreenshotsPullCommand({
+        config: options.config,
+        app: options.app,
+        platform: options.platform,
+        locale: options.locale,
+      });
+      console.log(renderCommandSummary(summary));
+      applyCommandSummaryExitCode(summary);
+    });
+
+  screenshotsCommand
+    .command("diff")
+    .description("Compare configured screenshot locales with local screenshot folders")
+    .action(async () => {
+      const options = program.opts<GlobalOptions>();
+      const summary = await runScreenshotsDiffCommand({
+        config: options.config,
+        app: options.app,
+        platform: options.platform,
       });
       console.log(renderCommandSummary(summary));
       applyCommandSummaryExitCode(summary);

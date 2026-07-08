@@ -1,13 +1,14 @@
-# storemeta Project Documentation
+# storemeta Project Plan
 
 `storemeta` is a TypeScript CLI for pulling, validating, and pushing App Store Connect and Google Play metadata and screenshots.
 
-This document is the single merged project specification for v1. It replaces the need to read multiple planning files separately.
+This document is the implementation plan and historical project specification for v1. For current user-facing behavior and config reference, see [`DOCUMENTATION.md`](DOCUMENTATION.md).
 
 ## 1. Project Status
 
 Current stage:
-- documentation-first planning
+- core CLI implemented with automated tests passing
+- remaining work is release verification against real Apple and Google test apps
 
 Locked decisions:
 - language: TypeScript
@@ -24,7 +25,7 @@ Locked decisions:
 - license: MIT
 
 Still flexible:
-- exact app targeting behavior during implementation, though the config is designed to support both single-app and multi-app usage
+- public-release hardening based on real App Store Connect and Google Play verification
 
 Naming note:
 - `sm` is intentionally not the primary command because it is too short and more likely to collide with other tools
@@ -110,21 +111,18 @@ The product must avoid:
 - hardcoded screenshot type assumptions with no override path
 - mixing config parsing, API transport, validation, and output formatting in one module
 
-### Product Gaps To Close During Implementation
+### Product Gaps To Close Before Public Release
 
-These capabilities must exist before the first release:
-- metadata pull for both platforms
-- screenshot pull for both platforms
-- unified config loading and schema validation
-- reusable auth clients for Apple and Google
-- deterministic local file writers
-- cross-platform validation
-- automated tests
-- npm packaging
+These capabilities should be verified before the first public release:
+- metadata pull and push against a real Apple test app
+- metadata pull and push against a real Google Play test app
+- screenshot pull and push against real Apple and Google test apps
+- no secrets in logs, package contents, examples, docs, or git history
+- npm package install and binary execution from the packed tarball
 
 ## 5. Architecture Direction
 
-The CLI should be implemented as a TypeScript Node.js project.
+The CLI is implemented as a TypeScript Node.js project.
 
 Recommended internal modules:
 - `cli`
@@ -141,18 +139,18 @@ Recommended internal modules:
 - `platforms/google/metadata`
 - `platforms/google/screenshots`
 
-Initial tooling choices:
+Tooling choices:
 - CLI parser: `commander`
 - HTTP client: native `fetch` from Node.js 20+
 - Test runner: `vitest`
-- Linting and formatting: deferred until core implementation exists
+- Linting and formatting: still deferred
 
 High-level design:
 - one unified CLI surface
 - one root config file
 - two platform adapters: Apple and Google
 - local normalized file layout
-- strict validation before any write operation
+- strict validation for loaded inputs before write operations
 
 Implementation guidance:
 - Google commands should share one edit-session helper
@@ -238,9 +236,8 @@ Behavior:
 - write one file per locale per platform
 - preserve deterministic key ordering
 
-New implementation required:
-- Google Play metadata pull can reuse the existing fetch concept, but must be rewritten into the shared CLI architecture
-- App Store metadata pull must be implemented as a first-class command rather than inferred from upload helpers
+Implementation status:
+- implemented as a first-class CLI command for Apple and Google metadata
 
 Examples:
 
@@ -255,7 +252,7 @@ Purpose:
 - push local metadata files to stores
 
 Behavior:
-- validate before upload
+- validate loaded metadata documents before upload
 - respect `--dry-run`
 - update existing localizations when present
 - create missing localizations when the platform allows it
@@ -277,8 +274,8 @@ Behavior:
 - fetch by locale and display type where supported
 - write deterministic file names such as `1.png`, `2.png`, `3.png`
 
-New implementation required:
-- this must be implemented as a first-class flow for both platforms
+Implementation status:
+- implemented as a first-class CLI command for Apple and Google screenshots
 
 ### `storemeta screenshots push`
 
@@ -286,9 +283,9 @@ Purpose:
 - push local screenshots to stores
 
 Behavior:
-- validate before upload
+- validate loaded screenshot sets before upload
 - respect `--dry-run`
-- replace existing screenshots in target sets unless a later flag adds merge behavior
+- replace existing screenshots in target sets only when `--replace` is supplied
 - print per-locale summaries
 
 Examples:
@@ -316,7 +313,8 @@ Possible later extension:
 - invalid config: fail before network work
 - missing credentials: fail before network work
 - validation failure on push: fail before writes
-- partial failures: return non-zero and print a clear summary
+- current behavior: blocking failures throw and return non-zero
+- future behavior: aggregate partial failures and print a clear summary
 
 ### Reserved Future Commands
 
@@ -626,7 +624,8 @@ Before the first public release:
 
 Minimum:
 - `README.md`
-- `docs/PROJECT_DOCUMENTATION.md`
+- `docs/DOCUMENTATION.md`
+- `docs/PROJECT_PLAN.md`
 - `LICENSE`
 - `SECURITY.md`
 - `package.json`
@@ -669,27 +668,20 @@ The required integrations are within scope:
 - Google Play metadata reads and writes
 - Google Play screenshot upload flow
 
-The remaining work is productization:
-- TypeScript scaffold
-- config loader
-- shared validation
-- unified CLI
-- packaging for npm
+The remaining work is release verification:
+- run the CLI against real Apple and Google test apps
+- confirm no secret material is present in docs, logs, package contents, or git history
+- publish the first npm package once verification is complete
 
-More specifically, the largest net-new work is:
-- pull flows for screenshots
-- App Store metadata export into local schema
-- shared clients and transport abstractions
-- removal of single-app and single-directory assumptions
+The largest residual risk is real-store API behavior that unit tests cannot fully model.
 
 ## 12. Recommended Next Steps
 
-Implementation should begin in this order:
+Release work should continue in this order:
 
-1. scaffold the TypeScript project
-2. implement config loading and validation
-3. implement Apple and Google metadata pull
-4. implement Apple and Google metadata push
-5. implement screenshot pull and push
-6. add tests and sample fixtures
-7. prepare npm packaging
+1. verify Apple metadata pull and push with a real test app
+2. verify Google metadata pull and push with a real test app
+3. verify Apple screenshot pull and push with a real test app
+4. verify Google screenshot pull and push with a real test app
+5. inspect packed package contents and git history for secrets
+6. publish and tag the first release

@@ -2,9 +2,13 @@
 node_modules/
 dist/
 *.tgz
+storemeta.release.yml
+metadata/
+screenshots/
 .pack-test/
 .env
 .env.*
+!.env.release.example
 secrets/
 .secrets/
 *.p8

@@ -3,11 +3,7 @@ import { dirname, resolve } from "node:path";
 import type { GlobalOptions } from "../cli.js";
 import type { CommandSummary, CommandItemResult } from "./result-types.js";
 import { StoremetaError } from "./errors.js";
-import { loadConfigFile } from "../config/load-config.js";
-import { validateRootConfig } from "../config/schema.js";
-import { selectConfiguredApp } from "../config/select-app.js";
 import { resolveSelectedPlatforms } from "../config/select-platforms.js";
-import { normalizeLocaleCode } from "../locales/normalize.js";
 import { createAppStoreConnectClient } from "../platforms/apple/client.js";
 import {
   clearAppleScreenshotUploadTargets,
@@ -26,6 +22,7 @@ import {
   mapGoogleScreenshotSetsToTargets,
   uploadGoogleScreenshotTargets,
 } from "../platforms/google/screenshots/push.js";
+import { createCommandContext } from "./context.js";
 
 function createSuccessSummary(results: CommandItemResult[]): CommandSummary {
   return {
@@ -43,16 +40,14 @@ export async function runScreenshotsPushCommand(
     "config" | "app" | "platform" | "locale" | "dryRun" | "replace"
   >,
 ): Promise<CommandSummary> {
-  const loadedConfig = await loadConfigFile(options.config);
-  const config = validateRootConfig(loadedConfig.parsed);
-  const app = selectConfiguredApp(config, options.app);
-  const selectedPlatforms = resolveSelectedPlatforms(app, options.platform);
+  const context = await createCommandContext(options);
+  const app = context.app;
+  const selectedPlatforms = resolveSelectedPlatforms(app, context.platform);
   const screenshotsBaseDir = resolve(
-    dirname(loadedConfig.path),
+    dirname(context.configPath),
     app.settings.screenshots.baseDir,
   );
-  const selectedLocale =
-    options.locale === undefined ? undefined : normalizeLocaleCode(options.locale);
+  const selectedLocale = context.locale;
   const results: CommandItemResult[] = [];
 
   for (const platform of selectedPlatforms) {
@@ -74,13 +69,13 @@ export async function runScreenshotsPushCommand(
         ...screenshotSets.map((set) => ({
           target: `apple/${set.locale}/${set.assetType}`,
           success: true,
-          message: options.dryRun
+          message: context.dryRun
             ? `Would upload ${set.files.length} screenshots`
             : `Uploaded ${set.files.length} screenshots`,
         })),
       );
 
-      if (options.dryRun) {
+      if (context.dryRun) {
         for (const screenshotSet of screenshotSets) {
           console.log(
             `DRY RUN apple screenshots ${screenshotSet.locale}/${screenshotSet.assetType} (${screenshotSet.files.length} files)`,
@@ -147,15 +142,15 @@ export async function runScreenshotsPushCommand(
 
     results.push(
       ...uploadTargets.map((target) => ({
-        target: `google/${target.targetLocale}/${target.imageType}`,
-        success: true,
-        message: options.dryRun
-          ? `Would upload ${target.files.length} screenshots`
-          : `Uploaded ${target.files.length} screenshots`,
-      })),
-    );
+          target: `google/${target.targetLocale}/${target.imageType}`,
+          success: true,
+          message: context.dryRun
+            ? `Would upload ${target.files.length} screenshots`
+            : `Uploaded ${target.files.length} screenshots`,
+        })),
+      );
 
-    if (options.dryRun) {
+    if (context.dryRun) {
       for (const target of uploadTargets) {
         console.log(
           `DRY RUN google screenshots ${target.targetLocale}/${target.imageType} (${target.files.length} files)`,

@@ -12,13 +12,18 @@
   },
   "files": [
     "dist",
+    "docs",
+    "examples",
+    ".env.release.example",
+    "storemeta.release.example.yml",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "node ./scripts/build.mjs",
     "check": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:release": "node ./scripts/verify-release.mjs"
   },
   "repository": {
     "type": "git",

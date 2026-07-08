@@ -246,7 +246,7 @@ Notable examples:
 
 ## Practical V1 Implications For `storemeta`
 
-### Safe V1 Metadata Surface To Target
+### Confirmed API Surface Worth Targeting
 
 Apple localized:
 - `name`
@@ -281,9 +281,9 @@ Google non-localized:
 - `contactEmail`
 - `contactPhone`
 
-### Recommended V1 Cut
+### Current CLI Implementation Cut
 
-For the first implementation, the lowest-risk confirmed API surface is:
+The current `storemeta` CLI implements this subset:
 
 Apple:
 - app-info localization text
@@ -293,8 +293,6 @@ Apple:
 Google:
 - listing text
 - screenshots
-- optionally `icon` and `featureGraphic`
-- app details contact information
 
 Everything beyond that should be implemented only after confirming the exact write semantics in code and tests.
 

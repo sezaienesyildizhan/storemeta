@@ -29,7 +29,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add an HTTP client strategy.
 - [x] Add a schema validation library for config and metadata validation.
 - [x] Add test tooling.
-- [x] Add linting and formatting tooling if desired.
+- [ ] Add linting and formatting tooling if desired.
 
 ## 3. Source Structure
 
@@ -228,7 +228,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 - [x] Define consistent error messages for config, auth, validation, API, and filesystem failures.
 - [x] Standardize command headers and summaries.
-- [x] Ensure partial failures return non-zero exit codes.
+- [ ] Add true partial-failure aggregation for multi-target command summaries.
 - [x] Make destructive behavior explicit in command output.
 
 ## 24. Fixtures And Sample Project
@@ -258,6 +258,17 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add config examples that match the real implementation.
 - [x] Add troubleshooting guidance for Apple and Google auth setup.
 - [x] Add contributor setup instructions.
+- [x] Add dedicated auth setup documentation for Apple and Google credentials.
+
+## 26.1 Product Polish Commands
+
+- [x] Add `storemeta auth check`.
+- [x] Add `storemeta config doctor`.
+- [x] Add `storemeta locales list`.
+- [x] Add `storemeta metadata diff`.
+- [x] Add `storemeta screenshots diff`.
+- [x] Add `storemeta scaffold`.
+- [x] Print next-step auth guidance after `storemeta init`.
 
 ## 27. npm Packaging
 
@@ -271,13 +282,22 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 
 - [x] Run `storemeta init` in a clean temp directory.
 - [x] Run `storemeta validate` against the generated sample project.
-- [ ] Verify Apple metadata pull with a real test app.
-- [ ] Verify Apple metadata push with `--dry-run`.
-- [ ] Verify Google metadata pull with a real test app.
-- [ ] Verify Google metadata push with `--dry-run`.
-- [ ] Verify Apple screenshot pull and push behavior.
-- [ ] Verify Google screenshot pull and push behavior.
-- [ ] Confirm no secrets appear in logs, examples, package contents, or docs.
+- [x] Add release verification config and environment templates.
+- [x] Add release verification script for local and real-store checks.
+- [x] Verify Apple metadata pull with a real test app.
+- [x] Verify Apple metadata push with `--dry-run` against a real test app.
+- [x] Verify Apple screenshots pull with a real test app.
+- [x] Verify Apple screenshots push with `--dry-run` against a real test app.
+- [x] Verify Google metadata pull with a real test app.
+- [x] Verify Google metadata push with `--dry-run` against a real test app.
+- [x] Verify Google screenshots pull with a real test app.
+- [x] Verify Google screenshots push with `--dry-run` against a real test app.
+- [x] Verify packed tarball install in a clean temp project.
+- [x] Verify `storemeta --help`, `storemeta init`, and `storemeta validate` from the packed install.
+- [x] Audit logs, examples, package contents, and docs for secrets.
+- [x] Audit git history for secrets before public push.
+- [x] Decide whether partial validation summary aggregation is required before first release: defer until after initial release.
+- [x] Decide whether lint and formatting tooling is required before first release: defer until after initial release.
 
 ## 29. First Public Release
 

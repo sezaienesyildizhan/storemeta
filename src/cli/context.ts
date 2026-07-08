@@ -9,6 +9,15 @@ import { validateCredentialEnvVarNames } from "../config/validate-credential-env
 import { validateRequiredPlatformIdentifiers } from "../config/validate-platform-identifiers.js";
 import { normalizeLocaleCode } from "../locales/normalize.js";
 
+export interface CommandContextOptions {
+  config?: string;
+  app?: string;
+  platform?: GlobalOptions["platform"];
+  locale?: string;
+  dryRun?: boolean;
+  verbose?: boolean;
+}
+
 export interface CommandContext {
   configPath: string;
   config: StoremetaConfig;
@@ -20,7 +29,7 @@ export interface CommandContext {
 }
 
 export async function createCommandContext(
-  options: GlobalOptions,
+  options: CommandContextOptions,
 ): Promise<CommandContext> {
   const loadedConfig = await loadConfigFile(options.config);
   const config = validateRootConfig(loadedConfig.parsed);
@@ -35,7 +44,7 @@ export async function createCommandContext(
     app: selectConfiguredApp(config, options.app),
     platform: options.platform,
     locale: options.locale === undefined ? undefined : normalizeLocaleCode(options.locale),
-    dryRun: options.dryRun,
-    verbose: options.verbose,
+    dryRun: options.dryRun ?? false,
+    verbose: options.verbose ?? false,
   };
 }

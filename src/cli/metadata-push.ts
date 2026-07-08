@@ -3,9 +3,6 @@ import { dirname, resolve } from "node:path";
 import type { GlobalOptions } from "../cli.js";
 import type { CommandSummary, CommandItemResult } from "./result-types.js";
 import { StoremetaError } from "./errors.js";
-import { loadConfigFile } from "../config/load-config.js";
-import { validateRootConfig } from "../config/schema.js";
-import { selectConfiguredApp } from "../config/select-app.js";
 import { resolveSelectedPlatforms } from "../config/select-platforms.js";
 import { normalizeLocaleCode } from "../locales/normalize.js";
 import { createAppStoreConnectClient } from "../platforms/apple/client.js";
@@ -25,6 +22,7 @@ import {
   mapGoogleMetadataDocuments,
   uploadGoogleListings,
 } from "../platforms/google/metadata/push.js";
+import { createCommandContext } from "./context.js";
 
 function filterLocalizedDocumentsByLocale<T extends { locale: string }>(
   documents: T[],
@@ -54,12 +52,11 @@ function createSuccessSummary(results: CommandItemResult[]): CommandSummary {
 export async function runMetadataPushCommand(
   options: Pick<GlobalOptions, "config" | "app" | "platform" | "locale" | "dryRun">,
 ): Promise<CommandSummary> {
-  const loadedConfig = await loadConfigFile(options.config);
-  const config = validateRootConfig(loadedConfig.parsed);
-  const app = selectConfiguredApp(config, options.app);
-  const selectedPlatforms = resolveSelectedPlatforms(app, options.platform);
+  const context = await createCommandContext(options);
+  const app = context.app;
+  const selectedPlatforms = resolveSelectedPlatforms(app, context.platform);
   const metadataBaseDir = resolve(
-    dirname(loadedConfig.path),
+    dirname(context.configPath),
     app.settings.metadata.baseDir,
   );
   const results: CommandItemResult[] = [];
@@ -77,18 +74,18 @@ export async function runMetadataPushCommand(
 
       const documents = filterLocalizedDocumentsByLocale(
         await loadAppleMetadataDocuments(metadataBaseDir),
-        options.locale,
+        context.locale,
       );
 
       results.push(
         ...documents.map((document) => ({
           target: `apple/${document.locale}`,
           success: true,
-          message: options.dryRun ? "Would sync Apple metadata" : "Synced Apple metadata",
+          message: context.dryRun ? "Would sync Apple metadata" : "Synced Apple metadata",
         })),
       );
 
-      if (options.dryRun) {
+      if (context.dryRun) {
         for (const document of documents) {
           console.log(`DRY RUN apple metadata ${document.locale}`);
         }
@@ -137,7 +134,7 @@ export async function runMetadataPushCommand(
 
     const documents = filterLocalizedDocumentsByLocale(
       await loadGoogleMetadataDocuments(metadataBaseDir),
-      options.locale,
+      context.locale,
     );
     const updates = mapGoogleMetadataDocuments(documents);
 
@@ -145,13 +142,13 @@ export async function runMetadataPushCommand(
       ...updates.map((update) => ({
         target: `google/${update.language}`,
         success: true,
-        message: options.dryRun
+        message: context.dryRun
           ? "Would upload listing metadata"
           : "Uploaded listing metadata",
       })),
     );
 
-    if (options.dryRun) {
+    if (context.dryRun) {
       for (const update of updates) {
         console.log(`DRY RUN google metadata ${update.language}`);
       }

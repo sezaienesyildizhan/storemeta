@@ -2,9 +2,6 @@ import { dirname, resolve } from "node:path";
 
 import type { GlobalOptions } from "../cli.js";
 import { StoremetaError } from "./errors.js";
-import { loadConfigFile } from "../config/load-config.js";
-import { validateRootConfig } from "../config/schema.js";
-import { selectConfiguredApp } from "../config/select-app.js";
 import { resolveSelectedPlatforms } from "../config/select-platforms.js";
 import { normalizeLocaleCode } from "../locales/normalize.js";
 import { createAppStoreConnectClient } from "../platforms/apple/client.js";
@@ -22,6 +19,7 @@ import {
   normalizeGoogleListing,
   writeGoogleListingDocuments,
 } from "../platforms/google/metadata/pull.js";
+import { createCommandContext } from "./context.js";
 
 function filterLocalizedDocumentsByLocale<T extends { locale: string }>(
   documents: T[],
@@ -41,12 +39,11 @@ function filterLocalizedDocumentsByLocale<T extends { locale: string }>(
 export async function runMetadataPullCommand(
   options: Pick<GlobalOptions, "config" | "app" | "locale" | "platform">,
 ): Promise<void> {
-  const loadedConfig = await loadConfigFile(options.config);
-  const config = validateRootConfig(loadedConfig.parsed);
-  const app = selectConfiguredApp(config, options.app);
-  const selectedPlatforms = resolveSelectedPlatforms(app, options.platform);
+  const context = await createCommandContext(options);
+  const app = context.app;
+  const selectedPlatforms = resolveSelectedPlatforms(app, context.platform);
   const metadataBaseDir = resolve(
-    dirname(loadedConfig.path),
+    dirname(context.configPath),
     app.settings.metadata.baseDir,
   );
 
@@ -75,7 +72,7 @@ export async function runMetadataPullCommand(
             appStoreVersionLocalizations,
           ),
         ),
-        options.locale,
+        context.locale,
       );
 
       await writeAppleMetadataDocuments(metadataBaseDir, documents);
@@ -91,8 +88,8 @@ export async function runMetadataPullCommand(
       );
     }
 
-    const locales = options.locale
-      ? [normalizeLocaleCode(options.locale)]
+    const locales = context.locale
+      ? [normalizeLocaleCode(context.locale)]
       : (googleSettings.locales?.default ?? []).map(normalizeLocaleCode);
     const client = createGooglePlayClient(googleSettings.credentials);
 

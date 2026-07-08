@@ -1,0 +1,27 @@
+version: 1
+project:
+  name: Storemeta Release Verification
+  defaultApp: release-app
+apps:
+  release-app:
+    metadata:
+      baseDir: metadata
+      format: yaml
+    screenshots:
+      baseDir: screenshots
+    apple:
+      appId: "YOUR_APP_STORE_CONNECT_APP_ID"
+      credentials:
+        issuerIdEnv: STORE_APPLE_ISSUER_ID
+        keyIdEnv: STORE_APPLE_KEY_ID
+        privateKeyPathEnv: STORE_APPLE_PRIVATE_KEY_PATH
+      locales:
+        default:
+          - en-US
+    google:
+      packageName: com.example.yourapp
+      credentials:
+        serviceAccountPathEnv: STORE_GOOGLE_SERVICE_ACCOUNT_PATH
+      locales:
+        default:
+          - en-US
