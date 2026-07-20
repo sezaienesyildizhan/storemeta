@@ -1,6 +1,6 @@
 # Releasing storemeta
 
-storemeta uses GitHub Actions, Release Please, npm trusted publishing, and a separate Homebrew tap.
+storemeta uses GitHub Actions, Release Please, and npm trusted publishing.
 
 ## Release flow
 
@@ -9,7 +9,6 @@ storemeta uses GitHub Actions, Release Please, npm trusted publishing, and a sep
 3. Merging the Release Please pull request updates `package.json`, `package-lock.json`, and `CHANGELOG.md`, then creates a `vX.Y.Z` tag and GitHub Release.
 4. The release workflow checks, tests, builds, and packs that exact release commit.
 5. npm publishes through OpenID Connect without a long-lived npm token.
-6. `sezaienesyildizhan/homebrew-tap` detects the new npm version and updates its formula within an hour.
 
 Normal commits do not publish packages directly. This prevents duplicate npm versions and keeps release timing explicit.
 
@@ -49,9 +48,3 @@ If GitHub created the release but npm publishing failed before the version reach
 4. Run the workflow.
 
 The recovery path checks out the matching `vX.Y.Z` tag and reruns the complete verification before publishing. Never bump or retag a released version to recover a transient npm failure.
-
-## Homebrew
-
-The formula lives in `sezaienesyildizhan/homebrew-tap`. Its scheduled workflow reads npm's `latest` dist-tag, downloads the published tarball, verifies its SHA-256, and commits an update only when the package changed.
-
-For an urgent Homebrew update, manually run the tap repository's `Sync storemeta` workflow after npm publishing completes.
