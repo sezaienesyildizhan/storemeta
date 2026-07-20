@@ -14,8 +14,6 @@
     "dist",
     "docs",
     "examples",
-    ".env.release.example",
-    "storemeta.release.example.yml",
     "README.md",
     "LICENSE"
   ],

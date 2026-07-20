@@ -8,7 +8,7 @@ storemeta.release.yml
 .pack-test/
 .env
 .env.*
-!.env.release.example
+!examples/release/.env.release.example
 secrets/
 .secrets/
 *.p8

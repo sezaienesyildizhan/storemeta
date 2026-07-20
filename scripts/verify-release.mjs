@@ -187,7 +187,7 @@ if (!options.realStore) {
 
 if (!existsSync(configPath)) {
   throw new Error(
-    `Real-store config not found at ${configPath}. Copy storemeta.release.example.yml to storemeta.release.yml and fill real app identifiers.`,
+    `Real-store config not found at ${configPath}. Copy examples/release/storemeta.release.example.yml to storemeta.release.yml and fill real app identifiers.`,
   );
 }
 

@@ -22,8 +22,8 @@ This runs:
 Create local files from the templates:
 
 ```bash
-cp storemeta.release.example.yml storemeta.release.yml
-cp .env.release.example .env.release.local
+cp examples/release/storemeta.release.example.yml storemeta.release.yml
+cp examples/release/.env.release.example .env.release.local
 ```
 
 Fill these values in `storemeta.release.yml`:

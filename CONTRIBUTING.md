@@ -69,3 +69,4 @@ If a behavior change does not include tests, explain why in the PR description.
 - never commit Google service account JSON files
 - never commit real app metadata or production screenshots
 - keep example values fake and publish-safe
+- keep real release verification files local; use templates under `examples/release/`
