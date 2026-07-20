@@ -1,10 +1,10 @@
 .DS_Store
 node_modules/
 dist/
+coverage/
 *.tgz
 storemeta.release.yml
-metadata/
-screenshots/
+/metadata/
 .pack-test/
 .env
 .env.*
@@ -14,4 +14,3 @@ secrets/
 *.p8
 *.pem
 *.key
-reference/

@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises";
+import { chmod, rm } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -18,3 +18,5 @@ const result = spawnSync("npx", ["tsc", "-p", tsconfigBuildPath], {
 if (result.status !== 0) {
   process.exit(result.status ?? 1);
 }
+
+await chmod(join(distDirectory, "cli.js"), 0o755);
