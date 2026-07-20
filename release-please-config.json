@@ -5,6 +5,7 @@
       "release-type": "node",
       "package-name": "storemeta",
       "include-v-in-tag": true,
+      "include-component-in-tag": false,
       "changelog-path": "CHANGELOG.md"
     }
   }
