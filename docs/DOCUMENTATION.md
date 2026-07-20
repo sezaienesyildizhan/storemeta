@@ -106,7 +106,7 @@ apps:
   example-app:
     metadata:
       baseDir: metadata
-      format: yaml
+      format: markdown
     screenshots:
       baseDir: screenshots
     apple:
@@ -161,9 +161,9 @@ Do not commit private keys, service account JSON files, or real `.env` files.
 
 ## Metadata Layout
 
-Current releases support YAML metadata. Markdown is the planned default metadata authoring format for the next metadata-format update. YAML will remain available as an alternative structured format.
+Markdown is the default metadata authoring format. YAML remains available as an alternative structured format.
 
-The planned default Markdown layout is:
+The default Markdown layout is:
 
 ```text
 metadata/
@@ -187,7 +187,7 @@ metadata/
     tr.yml
 ```
 
-The planned Markdown config is:
+The default Markdown config is:
 
 ```yaml
 metadata:
@@ -195,7 +195,7 @@ metadata:
   format: markdown
 ```
 
-The current YAML config is:
+The alternative YAML config is:
 
 ```yaml
 metadata:
@@ -203,9 +203,9 @@ metadata:
   format: yaml
 ```
 
-Mixed mode is not supported in the planned Markdown format. A configured app should use either Markdown metadata files or YAML metadata files.
+Mixed mode is not supported. A configured app must use either Markdown metadata files or YAML metadata files. A `.yml` or `.yaml` file under a Markdown-configured platform directory, or a `.md` file under a YAML-configured platform directory, fails validation and push before any remote write.
 
-Planned Markdown format specification:
+Markdown format specification:
 
 - [MARKDOWN_METADATA.md](MARKDOWN_METADATA.md)
 
@@ -368,15 +368,26 @@ Push commands also validate the files they load before writing to the remote sto
 
 Metadata pull writes one local file per platform and locale.
 
+For Markdown, pulled files include `platform`, `source: pulled`, and a shared command timestamp in `fetched_at` frontmatter. Pull rewrites the target locale file in stable canonical heading order.
+
 Screenshot pull writes downloaded screenshots into the canonical local screenshot layout. Google screenshot pull uses configured default locales unless `--locale` is supplied. Apple screenshot pull discovers version localizations from App Store Connect and can be filtered with `--locale`.
 
 ## Push Behavior
 
 Metadata push uploads local metadata documents to the selected platform.
 
+Before creating a remote client or edit session, metadata push parses and validates every selected platform file. `--dry-run` performs the same local loading and validation without remote writes.
+
 Screenshot push uploads local screenshot sets to the selected platform. Use `--replace` to delete existing remote screenshots in target sets before uploading local files.
 
 Use `--dry-run` for metadata and screenshot push previews.
+
+## Diff Behavior
+
+Diff commands inspect local project coverage; they do not fetch or compare remote store content.
+
+- `metadata diff` parses and validates local metadata files, then reports local, expected, missing, and extra locales against each platform's configured default locales.
+- `screenshots diff` reports local screenshot locales, set counts, expected locales, and missing locales.
 
 ## Development Verification
 

@@ -11,7 +11,7 @@ Use it when you want app store copy, locales, and screenshots to live in Git ins
 - Keep Apple and Google store metadata in one reviewable repository.
 - Pull the current live store state before making changes.
 - Validate config, locale files, screenshot folders, and credentials locally.
-- Preview metadata and screenshot changes with dry runs and diffs.
+- Preview remote writes with dry runs and inspect local locale coverage with diffs.
 - Scaffold the expected folder structure for every configured locale.
 
 ## Install
@@ -68,12 +68,12 @@ Remove `--dry-run` only after the output looks right.
 `storemeta init` creates the starter structure. `storemeta scaffold` can be run later to create any missing locale metadata files or screenshot folders from your config.
 
 ```text
-storemeta.config.yml
+storemeta.yml
 metadata/
   apple/
-    en-US.yml
+    en-US.md
   google/
-    en-US.yml
+    en-US.md
 screenshots/
   apple/
     en-US/
@@ -110,10 +110,10 @@ Keep real keys in ignored local files such as `.env.local`, `.env.release.local`
 - `storemeta config doctor` explains config and project layout issues.
 - `storemeta locales list` lists configured locales.
 - `storemeta metadata pull` downloads store metadata.
-- `storemeta metadata diff` compares local metadata against store metadata.
+- `storemeta metadata diff` compares parsed local metadata locales with configured locales.
 - `storemeta metadata push` uploads metadata.
 - `storemeta screenshots pull` downloads screenshots.
-- `storemeta screenshots diff` compares local screenshots against store screenshots.
+- `storemeta screenshots diff` compares local screenshot locales and set counts with configured locales.
 - `storemeta screenshots push` uploads screenshots.
 
 Run `storemeta --help` or any command with `--help` for options.
@@ -131,7 +131,7 @@ Run `storemeta --help` or any command with `--help` for options.
 
 ## Example Project
 
-A safe, fake sample project lives under [`examples/`](examples). Proposed Markdown metadata examples are in [`examples/metadata-md`](examples/metadata-md).
+A safe, fake sample project lives under [`examples/`](examples). The default Markdown metadata examples are in [`examples/metadata-md`](examples/metadata-md), and YAML alternatives are in [`examples/metadata`](examples/metadata).
 
 ## Documentation
 
@@ -139,7 +139,7 @@ The current user and config documentation is here:
 
 - [DOCUMENTATION.md](docs/DOCUMENTATION.md)
 
-Planned Markdown metadata format:
+Markdown metadata format:
 
 - [MARKDOWN_METADATA.md](docs/MARKDOWN_METADATA.md)
 

@@ -6,7 +6,7 @@ apps:
   release-app:
     metadata:
       baseDir: metadata
-      format: yaml
+      format: markdown
     screenshots:
       baseDir: screenshots
     apple:

@@ -12,10 +12,8 @@ This file is the working guide for AI agents and contributors changing this repo
 - Language: TypeScript, ESM, `moduleResolution: NodeNext`
 - Test runner: Vitest
 - Config file: `storemeta.yml`
-- Current released metadata format: YAML
-- Planned default metadata format: Markdown, specified in `docs/MARKDOWN_METADATA.md`
-
-Do not describe planned Markdown metadata support as shipped until the implementation and tests in `docs/TODO.md` are complete.
+- Default metadata format: Markdown, specified in `docs/MARKDOWN_METADATA.md`
+- Alternative metadata format: YAML
 
 ## Repository Map
 
@@ -65,22 +63,20 @@ Use `npm run verify:release` only when intentionally verifying release behavior.
 
 ## Metadata Format Rules
 
-Current implemented behavior is YAML-first:
+Current implemented behavior is Markdown-first:
 
 ```text
 metadata/
-  apple/en-US.yml
-  google/en-US.yml
+  apple/en-US.md
+  google/en-US.md
 ```
 
-Markdown metadata support is planned and documented in `docs/MARKDOWN_METADATA.md`.
-
-When implementing Markdown metadata:
+When changing metadata formats:
 
 - No mixed mode. `metadata.format: markdown` means `.md` only; `metadata.format: yaml` means `.yml` or `.yaml` only.
 - Markdown must parse to the existing internal Apple and Google metadata document types before API mapping.
 - Frontmatter and heading parsing rules must follow `docs/MARKDOWN_METADATA.md`.
-- Update `init`, `scaffold`, `validate`, `metadata pull`, `metadata push`, and `metadata diff` together or clearly mark incomplete work in `docs/TODO.md`.
+- Keep `init`, `scaffold`, `validate`, `metadata pull`, `metadata push`, and `metadata diff` behavior aligned.
 - Add tests for parser edge cases, duplicate headings, unknown headings, format mismatches, and Google length limits.
 
 ## Platform Behavior Rules
@@ -137,12 +133,12 @@ Update docs in the same change when behavior, config, file layout, or command ou
 
 - `README.md`: public landing page and quick start
 - `docs/DOCUMENTATION.md`: current user-facing behavior
-- `docs/MARKDOWN_METADATA.md`: planned Markdown metadata contract
+- `docs/MARKDOWN_METADATA.md`: implemented Markdown metadata contract
 - `docs/AUTH_SETUP.md`: Apple and Google credential setup
 - `docs/TODO.md`: implementation checklist and remaining work
 - `examples/`: fake sample files only
 
-Do not let `README.md` or `docs/DOCUMENTATION.md` claim a planned feature is shipped before implementation is complete.
+Keep `README.md`, `docs/DOCUMENTATION.md`, examples, and command behavior synchronized.
 
 ## Security And Local Files
 
