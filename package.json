@@ -1,6 +1,6 @@
 {
   "name": "storemeta",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Store App Store Connect and Google Play metadata and screenshots as code.",
   "license": "MIT",
   "type": "module",
