@@ -6,6 +6,9 @@ import type { CommandItemResult, CommandSummary } from "./result-types.js";
 import type { ConfiguredPlatform } from "../config/select-platforms.js";
 import { resolveSelectedPlatforms } from "../config/select-platforms.js";
 import { normalizeLocaleCode } from "../locales/normalize.js";
+import { metadataFileName } from "../formats/metadata-files.js";
+import { renderMarkdownMetadataScaffold } from "../formats/markdown-metadata.js";
+import { serializeMetadataDocument } from "../formats/serialize-metadata.js";
 import { createCommandContext } from "./context.js";
 
 const DEFAULT_APPLE_SCREENSHOT_TYPES = ["APP_IPHONE_65"];
@@ -51,8 +54,16 @@ function screenshotTypesForPlatform(platform: ConfiguredPlatform): string[] {
     : DEFAULT_GOOGLE_SCREENSHOT_TYPES;
 }
 
-function renderMetadataSeed(locale: string): string {
-  return `locale: ${locale}\n`;
+function renderMetadataSeed(
+  platform: ConfiguredPlatform,
+  locale: string,
+  format: "markdown" | "yaml",
+): string {
+  if (format === "markdown") {
+    return renderMarkdownMetadataScaffold(platform, locale);
+  }
+
+  return serializeMetadataDocument({ locale });
 }
 
 export async function runScaffoldCommand(
@@ -67,22 +78,24 @@ export async function runScaffoldCommand(
     context.app.settings.screenshots.baseDir,
   );
   const results: CommandItemResult[] = [];
+  const metadataFormat = context.app.settings.metadata.format;
 
   for (const platform of platforms) {
     const locales = defaultLocalesForPlatform(context, platform);
 
     for (const locale of locales) {
-      const metadataPath = join(metadataBaseDir, platform, `${locale}.yml`);
+      const fileName = metadataFileName(locale, metadataFormat);
+      const metadataPath = join(metadataBaseDir, platform, fileName);
 
       await mkdir(dirname(metadataPath), { recursive: true });
 
       const createdMetadata = await writeFileIfMissing(
         metadataPath,
-        renderMetadataSeed(locale),
+        renderMetadataSeed(platform, locale, metadataFormat),
       );
 
       results.push({
-        target: `metadata/${platform}/${locale}.yml`,
+        target: `metadata/${platform}/${fileName}`,
         success: true,
         message: createdMetadata ? "Created metadata file" : "Metadata file exists",
       });

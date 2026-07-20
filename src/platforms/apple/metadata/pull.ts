@@ -1,4 +1,6 @@
 import type { AppleMetadataDocument } from "../../../formats/metadata-types.js";
+import type { MetadataFormat } from "../../../config/types.js";
+import { metadataFileName } from "../../../formats/metadata-files.js";
 import { normalizeLocaleCode } from "../../../locales/normalize.js";
 import { writeMetadataFile } from "../../../writers/write-metadata.js";
 import type { AppStoreConnectClient } from "../client.js";
@@ -232,15 +234,28 @@ export function normalizeMergedAppleLocalizations(
 export async function writeAppleMetadataDocument(
   metadataBaseDir: string,
   document: AppleMetadataDocument,
+  format: MetadataFormat = "yaml",
+  fetchedAt?: string,
 ): Promise<string> {
   const normalizedLocale = normalizeLocaleCode(document.locale);
 
   return writeMetadataFile(
     metadataBaseDir,
-    `apple/${normalizedLocale}.yml`,
+    `apple/${metadataFileName(normalizedLocale, format)}`,
     {
       ...document,
       locale: normalizedLocale,
+    },
+    {
+      format,
+      platform: "apple",
+      markdown: {
+        frontmatter: {
+          platform: "apple",
+          source: "pulled",
+          fetchedAt,
+        },
+      },
     },
   );
 }
@@ -248,10 +263,12 @@ export async function writeAppleMetadataDocument(
 export async function writeAppleMetadataDocuments(
   metadataBaseDir: string,
   documents: AppleMetadataDocument[],
+  format: MetadataFormat = "yaml",
+  fetchedAt?: string,
 ): Promise<string[]> {
   return Promise.all(
     documents.map((document) =>
-      writeAppleMetadataDocument(metadataBaseDir, document),
+      writeAppleMetadataDocument(metadataBaseDir, document, format, fetchedAt),
     ),
   );
 }

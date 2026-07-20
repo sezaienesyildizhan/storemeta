@@ -9,5 +9,5 @@ Everything in this directory is fake and safe to publish.
 
 ## Layouts
 
-- [`metadata-md/`](metadata-md) shows the proposed default Markdown metadata layout.
-- [`metadata/`](metadata) shows the YAML metadata layout.
+- [`metadata-md/`](metadata-md) shows the default Markdown metadata layout used by [`storemeta.yml`](storemeta.yml).
+- [`metadata/`](metadata) shows the supported YAML alternative.

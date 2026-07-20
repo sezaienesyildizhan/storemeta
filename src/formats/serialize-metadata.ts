@@ -1,5 +1,10 @@
 import YAML from "yaml";
 
+export {
+  renderMarkdownMetadataScaffold,
+  serializeMarkdownMetadataDocument,
+} from "./markdown-metadata.js";
+
 function sortMetadataValue(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(sortMetadataValue);

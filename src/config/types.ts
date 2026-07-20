@@ -1,4 +1,4 @@
-export type MetadataFormat = "yaml";
+export type MetadataFormat = "markdown" | "yaml";
 
 export interface ProjectSettings {
   name: string;

@@ -12,13 +12,13 @@ import {
 } from "../../../src/validation/metadata/google.js";
 import { validateMetadataFiles } from "../../../src/validation/metadata/files.js";
 
-function createApp(): ConfiguredApp {
+function createApp(format: "markdown" | "yaml" = "yaml"): ConfiguredApp {
   return {
     id: "example",
     settings: {
       metadata: {
         baseDir: "metadata",
-        format: "yaml",
+        format,
       },
       screenshots: {
         baseDir: "screenshots",
@@ -159,6 +159,60 @@ describe("validateMetadataFiles", () => {
           "google",
         ]),
       ).rejects.toThrow(/Google metadata length validation failed.*title/);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("validates Markdown files and rejects YAML files in Markdown mode", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "storemeta-metadata-"));
+    const googleDir = join(tempDir, "metadata", "google");
+
+    try {
+      await mkdir(googleDir, { recursive: true });
+      await writeFile(
+        join(googleDir, "en-US.md"),
+        "---\nlocale: en-US\n---\n\n# Google Play Listing\n\n## Title\n\nExample App\n",
+      );
+
+      await expect(
+        validateMetadataFiles(
+          join(tempDir, "storemeta.yml"),
+          createApp("markdown"),
+          ["google"],
+        ),
+      ).resolves.toBeUndefined();
+
+      await writeFile(join(googleDir, "tr.yml"), "locale: tr\n");
+
+      await expect(
+        validateMetadataFiles(
+          join(tempDir, "storemeta.yml"),
+          createApp("markdown"),
+          ["google"],
+        ),
+      ).rejects.toThrow(/YAML metadata file found while metadata\.format is markdown/);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects Markdown files in YAML mode", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "storemeta-metadata-"));
+    const appleDir = join(tempDir, "metadata", "apple");
+
+    try {
+      await mkdir(appleDir, { recursive: true });
+      await writeFile(
+        join(appleDir, "en-US.md"),
+        "---\nlocale: en-US\n---\n",
+      );
+
+      await expect(
+        validateMetadataFiles(join(tempDir, "storemeta.yml"), createApp(), [
+          "apple",
+        ]),
+      ).rejects.toThrow(/Markdown metadata file found while metadata\.format is yaml/);
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }

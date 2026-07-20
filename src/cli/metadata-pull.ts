@@ -46,6 +46,8 @@ export async function runMetadataPullCommand(
     dirname(context.configPath),
     app.settings.metadata.baseDir,
   );
+  const metadataFormat = app.settings.metadata.format;
+  const fetchedAt = new Date().toISOString();
 
   for (const platform of selectedPlatforms) {
     if (platform === "apple") {
@@ -75,7 +77,12 @@ export async function runMetadataPullCommand(
         context.locale,
       );
 
-      await writeAppleMetadataDocuments(metadataBaseDir, documents);
+      await writeAppleMetadataDocuments(
+        metadataBaseDir,
+        documents,
+        metadataFormat,
+        fetchedAt,
+      );
       continue;
     }
 
@@ -105,7 +112,12 @@ export async function runMetadataPullCommand(
         );
         const documents = listings.map(normalizeGoogleListing);
 
-        await writeGoogleListingDocuments(metadataBaseDir, documents);
+        await writeGoogleListingDocuments(
+          metadataBaseDir,
+          documents,
+          metadataFormat,
+          fetchedAt,
+        );
       },
       {
         autoCommit: false,

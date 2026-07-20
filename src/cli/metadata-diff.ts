@@ -1,26 +1,38 @@
-import { readdir } from "node:fs/promises";
-import { dirname, extname, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 
 import type { GlobalOptions } from "../cli.js";
 import type { CommandItemResult, CommandSummary } from "./result-types.js";
 import type { ConfiguredPlatform } from "../config/select-platforms.js";
+import type { MetadataFormat } from "../config/types.js";
+import {
+  listMetadataFilesForFormat,
+  loadMetadataFileForFormat,
+} from "../formats/metadata-files.js";
+import { validateAppleMetadataDocument } from "../validation/metadata/apple.js";
+import { validateGoogleMetadataDocument } from "../validation/metadata/google.js";
 import { resolveSelectedPlatforms } from "../config/select-platforms.js";
 import { normalizeLocaleCode } from "../locales/normalize.js";
 import { createCommandContext } from "./context.js";
 
-async function listMetadataLocales(platformDir: string): Promise<string[]> {
-  try {
-    const entries = await readdir(platformDir, { withFileTypes: true });
+async function listMetadataLocales(
+  platformDir: string,
+  platform: ConfiguredPlatform,
+  format: MetadataFormat,
+): Promise<string[]> {
+  const locales: string[] = [];
 
-    return entries
-      .filter((entry) => entry.isFile())
-      .map((entry) => entry.name)
-      .filter((fileName) => [".yml", ".yaml", ".md"].includes(extname(fileName)))
-      .map((fileName) => normalizeLocaleCode(fileName.slice(0, -extname(fileName).length)))
-      .sort((left, right) => left.localeCompare(right));
-  } catch {
-    return [];
+  for (const filePath of await listMetadataFilesForFormat(platformDir, format, {
+    allowMissing: true,
+  })) {
+    const parsed = (await loadMetadataFileForFormat(filePath, platform, format)).parsed;
+    const document =
+      platform === "apple"
+        ? validateAppleMetadataDocument(parsed)
+        : validateGoogleMetadataDocument(parsed);
+    locales.push(normalizeLocaleCode(document.locale));
   }
+
+  return locales.sort((left, right) => left.localeCompare(right));
 }
 
 function expectedLocalesForPlatform(
@@ -48,7 +60,11 @@ export async function runMetadataDiffCommand(
 
   for (const platform of platforms) {
     const expected = expectedLocalesForPlatform(context, platform);
-    const actual = await listMetadataLocales(resolve(metadataBaseDir, platform));
+    const actual = await listMetadataLocales(
+      resolve(metadataBaseDir, platform),
+      platform,
+      context.app.settings.metadata.format,
+    );
     const missing = expected.filter((locale) => !actual.includes(locale));
     const extra = actual.filter((locale) => expected.length > 0 && !expected.includes(locale));
 

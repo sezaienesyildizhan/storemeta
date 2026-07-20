@@ -1,12 +1,12 @@
 # Markdown Metadata Examples
 
-These files show the proposed full-listing Markdown format.
+These files show the supported full-listing Markdown format.
 
-This format is intended to become the default metadata authoring format for `storemeta`.
+This is the default metadata authoring format for `storemeta`.
 
-Implementation status is tracked in [`../../docs/TODO.md`](../../docs/TODO.md). The full format specification is in [`../../docs/MARKDOWN_METADATA.md`](../../docs/MARKDOWN_METADATA.md).
+The full format specification is in [`../../docs/MARKDOWN_METADATA.md`](../../docs/MARKDOWN_METADATA.md).
 
-The suggested shape is:
+The layout is:
 
 - one file per platform and locale
 - YAML frontmatter for routing metadata

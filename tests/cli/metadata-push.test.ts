@@ -157,7 +157,81 @@ function mockSharedConfig(platform: "apple" | "google") {
   resolveSelectedPlatformsMock.mockReturnValueOnce([platform]);
 }
 
+function mockCombinedConfig() {
+  loadConfigFileMock.mockResolvedValueOnce({
+    path: "/tmp/storemeta.yml",
+    parsed: {},
+  });
+  validateRootConfigMock.mockReturnValueOnce({
+    project: {
+      name: "Storemeta",
+      defaultApp: "demo",
+    },
+    apps: {},
+  });
+  selectConfiguredAppMock.mockReturnValueOnce({
+    id: "demo",
+    settings: {
+      metadata: {
+        baseDir: "metadata",
+        format: "markdown",
+      },
+      screenshots: {
+        baseDir: "screenshots",
+      },
+      apple: {
+        appId: "0000000000",
+        credentials: {
+          issuerIdEnv: "APPLE_ISSUER_ID",
+          keyIdEnv: "APPLE_KEY_ID",
+          privateKeyPathEnv: "APPLE_PRIVATE_KEY_PATH",
+        },
+      },
+      google: {
+        packageName: "com.example.demo",
+        credentials: {
+          serviceAccountPathEnv: "GOOGLE_SERVICE_ACCOUNT_PATH",
+        },
+      },
+    },
+  });
+  resolveSelectedPlatformsMock.mockReturnValueOnce(["apple", "google"]);
+}
+
 describe("runMetadataPushCommand", () => {
+  it("validates every selected platform before starting remote writes", async () => {
+    mockCombinedConfig();
+    loadAppleMetadataDocumentsMock.mockResolvedValueOnce([
+      {
+        locale: "en-US",
+        app_name: "Storemeta Example",
+      },
+    ]);
+    loadGoogleMetadataDocumentsMock.mockRejectedValueOnce(
+      new Error("Invalid Google metadata"),
+    );
+
+    await expect(
+      runMetadataPushCommand({
+        config: "storemeta.yml",
+        app: "demo",
+        platform: "all",
+        dryRun: false,
+      }),
+    ).rejects.toThrow("Invalid Google metadata");
+
+    expect(loadAppleMetadataDocumentsMock).toHaveBeenCalledWith(
+      "/tmp/metadata",
+      "markdown",
+    );
+    expect(loadGoogleMetadataDocumentsMock).toHaveBeenCalledWith(
+      "/tmp/metadata",
+      "markdown",
+    );
+    expect(createAppStoreConnectClientMock).not.toHaveBeenCalled();
+    expect(createGooglePlayClientMock).not.toHaveBeenCalled();
+  });
+
   it("supports Apple metadata dry runs without touching remote clients", async () => {
     mockSharedConfig("apple");
     loadAppleMetadataDocumentsMock.mockResolvedValueOnce([

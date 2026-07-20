@@ -1,9 +1,11 @@
 import { readFile } from "node:fs/promises";
-import { extname, resolve } from "node:path";
+import { basename, dirname, extname, resolve } from "node:path";
 
 import YAML from "yaml";
 
 import { StoremetaError } from "../cli/errors.js";
+import type { MetadataPlatform } from "./metadata-types.js";
+import { parseMarkdownMetadataDocument } from "./markdown-metadata.js";
 
 export interface LoadedMetadataFile {
   path: string;
@@ -38,14 +40,18 @@ async function loadMetadataFileForExtension(
 
   let parsed: unknown;
 
-  try {
-    parsed = YAML.parse(raw);
-  } catch (cause) {
-    throw new StoremetaError(
-      "CONFIG_ERROR",
-      `Failed to parse YAML metadata at ${resolvedPath}`,
-      { cause },
-    );
+  if (expectedExtension === ".md") {
+    parsed = raw;
+  } else {
+    try {
+      parsed = YAML.parse(raw);
+    } catch (cause) {
+      throw new StoremetaError(
+        "CONFIG_ERROR",
+        `Failed to parse YAML metadata at ${resolvedPath}`,
+        { cause },
+      );
+    }
   }
 
   return {
@@ -69,6 +75,25 @@ export async function loadYamlMetadataFile(
 
 export async function loadMarkdownMetadataFile(
   filePath: string,
+  platform?: MetadataPlatform,
 ): Promise<LoadedMetadataFile> {
-  return loadMetadataFileForExtension(filePath, ".md");
+  const loaded = await loadMetadataFileForExtension(filePath, ".md");
+  const inferredPlatform = basename(dirname(loaded.path));
+  const resolvedPlatform =
+    platform ??
+    (inferredPlatform === "apple" || inferredPlatform === "google"
+      ? inferredPlatform
+      : undefined);
+
+  if (resolvedPlatform === undefined) {
+    throw new StoremetaError(
+      "VALIDATION_ERROR",
+      `Cannot determine metadata platform for Markdown file at ${loaded.path}`,
+    );
+  }
+
+  return {
+    ...loaded,
+    parsed: parseMarkdownMetadataDocument(loaded.raw, resolvedPlatform, loaded.path),
+  };
 }

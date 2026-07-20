@@ -447,4 +447,31 @@ describe("writeAppleMetadataDocument", () => {
       await rm(metadataBaseDir, { recursive: true, force: true });
     }
   });
+
+  it("writes Apple metadata as Markdown with canonical headings", async () => {
+    const metadataBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+
+    try {
+      const filePath = await writeAppleMetadataDocument(
+        metadataBaseDir,
+        {
+          locale: "tr_TR",
+          app_name: "Ornek",
+          whats_new: "Hata duzeltmeleri",
+        },
+        "markdown",
+        "2026-07-20T12:00:00.000Z",
+      );
+
+      expect(filePath).toBe(join(metadataBaseDir, "apple", "tr-TR.md"));
+      await expect(readFile(filePath, "utf8")).resolves.toContain(
+        "## App Name\n\nOrnek",
+      );
+      await expect(readFile(filePath, "utf8")).resolves.toContain(
+        "## What's New\n\nHata duzeltmeleri",
+      );
+    } finally {
+      await rm(metadataBaseDir, { recursive: true, force: true });
+    }
+  });
 });

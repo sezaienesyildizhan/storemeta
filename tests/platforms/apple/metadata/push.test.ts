@@ -75,6 +75,31 @@ describe("loadAppleMetadataDocuments", () => {
     }
   });
 
+  it("loads and validates Apple Markdown documents", async () => {
+    const metadataBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
+    const appleMetadataDirectory = join(metadataBaseDir, "apple");
+
+    await mkdir(appleMetadataDirectory, { recursive: true });
+    await writeFile(
+      join(appleMetadataDirectory, "en-US.md"),
+      "---\nlocale: en-US\n---\n\n# App Store Listing\n\n## App Name\n\nExample App\n\n## Support URL\n\nhttps://example.com/support\n",
+    );
+
+    try {
+      await expect(
+        loadAppleMetadataDocuments(metadataBaseDir, "markdown"),
+      ).resolves.toEqual([
+        {
+          locale: "en-US",
+          app_name: "Example App",
+          support_url: "https://example.com/support",
+        },
+      ]);
+    } finally {
+      await rm(metadataBaseDir, { recursive: true, force: true });
+    }
+  });
+
   it("ignores unsupported file extensions in the Apple metadata directory", async () => {
     const metadataBaseDir = await mkdtemp(join(tmpdir(), "storemeta-"));
     const appleMetadataDirectory = join(metadataBaseDir, "apple");

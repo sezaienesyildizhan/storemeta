@@ -3,6 +3,7 @@ import { dirname, join, resolve } from "node:path";
 
 import { StoremetaError } from "./errors.js";
 import { DEFAULT_CONFIG_FILE } from "../config/load-config.js";
+import { renderMarkdownMetadataScaffold } from "../formats/markdown-metadata.js";
 
 export function renderStarterConfig(): string {
   return `version: 1
@@ -15,7 +16,7 @@ apps:
   example-app:
     metadata:
       baseDir: metadata
-      format: yaml
+      format: markdown
     screenshots:
       baseDir: screenshots
 
@@ -63,6 +64,16 @@ export async function runInitCommand(configPath?: string): Promise<string> {
   await writeFile(resolvedPath, renderStarterConfig(), "utf8");
   await mkdir(join(projectRoot, "metadata", "apple"), { recursive: true });
   await mkdir(join(projectRoot, "metadata", "google"), { recursive: true });
+  await writeFile(
+    join(projectRoot, "metadata", "apple", "en-US.md"),
+    renderMarkdownMetadataScaffold("apple", "en-US"),
+    "utf8",
+  );
+  await writeFile(
+    join(projectRoot, "metadata", "google", "en-US.md"),
+    renderMarkdownMetadataScaffold("google", "en-US"),
+    "utf8",
+  );
   await mkdir(
     join(projectRoot, "screenshots", "apple", "en-US", "APP_IPHONE_65"),
     { recursive: true },

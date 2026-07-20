@@ -5,8 +5,8 @@ project:
 apps:
   example-app:
     metadata:
-      baseDir: metadata
-      format: yaml
+      baseDir: metadata-md
+      format: markdown
     screenshots:
       baseDir: screenshots
     apple:

@@ -322,14 +322,14 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Document Markdown as the intended default metadata authoring format.
 - [x] Document YAML as the alternative metadata format.
 - [x] Document that mixed metadata mode is not supported.
-- [ ] Update config schema to support `metadata.format: markdown`.
-- [ ] Make `storemeta init` default to Markdown metadata.
-- [ ] Make `storemeta scaffold` create `.md` metadata files when format is Markdown.
-- [ ] Add Markdown frontmatter and heading parser.
-- [ ] Add Apple Markdown heading-to-field mapping.
-- [ ] Add Google Markdown heading-to-field mapping.
-- [ ] Make metadata pull write Markdown when format is Markdown.
-- [ ] Make metadata push read Markdown when format is Markdown.
-- [ ] Make metadata diff support Markdown format.
-- [ ] Make validate check Markdown frontmatter, headings, duplicate sections, and length limits.
-- [ ] Add tests for Markdown parsing, validation, pull, push, diff, and scaffold behavior.
+- [x] Update config schema to support `metadata.format: markdown`.
+- [x] Make `storemeta init` default to Markdown metadata.
+- [x] Make `storemeta scaffold` create `.md` metadata files when format is Markdown.
+- [x] Add Markdown frontmatter and heading parser.
+- [x] Add Apple Markdown heading-to-field mapping.
+- [x] Add Google Markdown heading-to-field mapping.
+- [x] Make metadata pull write Markdown when format is Markdown.
+- [x] Make metadata push read Markdown when format is Markdown.
+- [x] Make metadata diff support Markdown format.
+- [x] Make validate check Markdown frontmatter, headings, duplicate sections, and length limits.
+- [x] Add tests for Markdown parsing, validation, pull, push, diff, and scaffold behavior.

@@ -1,5 +1,7 @@
 # storemeta Project Plan
 
+> Historical implementation plan. It records the original v1 design and may describe superseded behavior. For current user-facing behavior, use [`DOCUMENTATION.md`](DOCUMENTATION.md); for the implemented Markdown contract, use [`MARKDOWN_METADATA.md`](MARKDOWN_METADATA.md).
+
 `storemeta` is a TypeScript CLI for pulling, validating, and pushing App Store Connect and Google Play metadata and screenshots.
 
 This document is the implementation plan and historical project specification for v1. For current user-facing behavior and config reference, see [`DOCUMENTATION.md`](DOCUMENTATION.md).

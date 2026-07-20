@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { StoremetaError } from "../../src/cli/errors.js";
+import { validateRootConfig } from "../../src/config/schema.js";
 import { validateBaseDirectoryPaths } from "../../src/config/validate-base-dirs.js";
 import { validateCredentialEnvVarNames } from "../../src/config/validate-credential-env-names.js";
 import { validateRequiredPlatformIdentifiers } from "../../src/config/validate-platform-identifiers.js";
@@ -77,6 +78,39 @@ describe("validateBaseDirectoryPaths", () => {
         }),
       ),
     ).toThrow(/metadata\.baseDir.*screenshots\.baseDir/);
+  });
+});
+
+describe("validateRootConfig metadata format", () => {
+  it("accepts Markdown and YAML and defaults omitted format to Markdown", () => {
+    const markdownConfig = createConfig({
+      metadata: { baseDir: "metadata", format: "markdown" },
+    });
+
+    expect(validateRootConfig(markdownConfig).apps.example!.metadata.format).toBe(
+      "markdown",
+    );
+
+    const withoutFormat = structuredClone(createConfig()) as unknown as {
+      apps: { example: { metadata: { baseDir: string; format?: string } } };
+    };
+    delete withoutFormat.apps.example.metadata.format;
+
+    expect(validateRootConfig(withoutFormat).apps.example!.metadata.format).toBe(
+      "markdown",
+    );
+    expect(validateRootConfig(createConfig()).apps.example!.metadata.format).toBe(
+      "yaml",
+    );
+  });
+
+  it("rejects unsupported metadata formats", () => {
+    const config = createConfig() as unknown as {
+      apps: { example: { metadata: { baseDir: string; format: string } } };
+    };
+    config.apps.example.metadata.format = "json";
+
+    expect(() => validateRootConfig(config)).toThrow(/metadata\.format/);
   });
 });
 

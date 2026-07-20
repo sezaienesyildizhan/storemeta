@@ -1,4 +1,6 @@
 import { GooglePlayClient } from "../client.js";
+import type { MetadataFormat } from "../../../config/types.js";
+import { metadataFileName } from "../../../formats/metadata-files.js";
 import type { GoogleMetadataDocument } from "../../../formats/metadata-types.js";
 import { normalizeLocaleCode } from "../../../locales/normalize.js";
 import { writeMetadataFile } from "../../../writers/write-metadata.js";
@@ -47,21 +49,38 @@ export function normalizeGoogleListing(
 export async function writeGoogleListingDocument(
   metadataBaseDir: string,
   document: GoogleMetadataDocument,
+  format: MetadataFormat = "yaml",
+  fetchedAt?: string,
 ): Promise<string> {
+  const normalizedLocale = normalizeLocaleCode(document.locale);
+
   return writeMetadataFile(
     metadataBaseDir,
-    `google/${normalizeLocaleCode(document.locale)}.yml`,
-    document,
+    `google/${metadataFileName(normalizedLocale, format)}`,
+    { ...document, locale: normalizedLocale },
+    {
+      format,
+      platform: "google",
+      markdown: {
+        frontmatter: {
+          platform: "google",
+          source: "pulled",
+          fetchedAt,
+        },
+      },
+    },
   );
 }
 
 export async function writeGoogleListingDocuments(
   metadataBaseDir: string,
   documents: GoogleMetadataDocument[],
+  format: MetadataFormat = "yaml",
+  fetchedAt?: string,
 ): Promise<string[]> {
   return Promise.all(
     documents.map((document) =>
-      writeGoogleListingDocument(metadataBaseDir, document),
+      writeGoogleListingDocument(metadataBaseDir, document, format, fetchedAt),
     ),
   );
 }
