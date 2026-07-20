@@ -151,7 +151,7 @@ Never commit real secrets, app metadata, production screenshots, or machine-loca
 Local-only examples include:
 
 - `.env`
-- `.env.*` except `.env.release.example`
+- `.env.*` except `examples/release/.env.release.example`
 - `secrets/`
 - `.secrets/`
 - `*.p8`
@@ -162,6 +162,8 @@ Local-only examples include:
 - package tarballs such as `*.tgz`
 
 `examples/` must remain fake and safe to publish. Do not copy real App Store or Google Play listings into examples.
+
+Release verification templates live in `examples/release/`. Real local copies, such as root `storemeta.release.yml` and `.env.release.local`, must stay ignored.
 
 If a command output or diff contains real identifiers, credentials, or pulled production metadata, stop and sanitize before committing.
 
@@ -244,7 +246,9 @@ final
 
 ## Release Notes
 
-Before publishing a new package:
+Releases are managed by Release Please and npm trusted publishing. Do not run `npm publish` locally during the normal release flow. See `docs/RELEASING.md` for the complete process.
+
+Before merging a Release Please pull request:
 
 1. Run `npm run check`.
 2. Run `npm test`.
@@ -252,6 +256,7 @@ Before publishing a new package:
 4. Run `npm pack --dry-run` and inspect included files.
 5. Confirm examples and docs contain no real secrets or production app data.
 6. Confirm package metadata in `package.json` is accurate.
+7. Confirm the generated version and changelog match the intended semantic version change.
 
 ## Agent Checklist
 

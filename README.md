@@ -16,11 +16,22 @@ Use it when you want app store copy, locales, and screenshots to live in Git ins
 
 ## Install
 
+With npm:
+
 ```bash
 npm install -g storemeta
 ```
 
+With Homebrew on macOS or Linux:
+
+```bash
+brew tap sezaienesyildizhan/tap
+brew trust --formula sezaienesyildizhan/tap/storemeta
+brew install sezaienesyildizhan/tap/storemeta
+```
+
 Requirements:
+
 - Node.js 20+
 
 ## Quick Start

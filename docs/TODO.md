@@ -307,6 +307,17 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Tag the release.
 - [x] Confirm the public repository contains no ignored or secret material.
 
+## 29.1 Release Automation And Distribution
+
+- [x] Run CI on pull requests and pushes to `main`.
+- [x] Test the minimum supported Node.js version and current LTS.
+- [x] Add Release Please versioning and changelog automation.
+- [x] Add npm trusted publishing workflow with provenance support.
+- [x] Add a manual recovery path for failed npm publishing.
+- [x] Publish a Homebrew tap for macOS and Linux.
+- [x] Automate Homebrew formula updates from npm releases.
+- [ ] Configure `storemeta` trusted publishing on npmjs.com.
+
 ## 30. Markdown Metadata Format
 
 - [x] Add mock Markdown metadata examples under `examples/metadata-md`.
