@@ -1,4 +1,4 @@
-import { access, rm } from "node:fs/promises";
+import { access, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -41,6 +41,15 @@ describe("command smoke tests", () => {
     await expect(
       access(join(projectPath, "metadata", "google")),
     ).resolves.toBeUndefined();
+    await expect(
+      readFile(join(projectPath, "metadata", "apple", "en-US.md"), "utf8"),
+    ).resolves.toContain("# App Store Listing");
+    await expect(
+      readFile(join(projectPath, "metadata", "google", "en-US.md"), "utf8"),
+    ).resolves.toContain("# Google Play Listing");
+    await expect(readFile(configPath, "utf8")).resolves.toContain(
+      "format: markdown",
+    );
     await expect(
       access(join(projectPath, "screenshots", "apple", "en-US", "APP_IPHONE_65")),
     ).resolves.toBeUndefined();

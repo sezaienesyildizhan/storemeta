@@ -60,6 +60,19 @@ export async function runMetadataPushCommand(
     app.settings.metadata.baseDir,
   );
   const results: CommandItemResult[] = [];
+  const metadataFormat = app.settings.metadata.format;
+  const appleDocuments = selectedPlatforms.includes("apple")
+    ? filterLocalizedDocumentsByLocale(
+        await loadAppleMetadataDocuments(metadataBaseDir, metadataFormat),
+        context.locale,
+      )
+    : [];
+  const googleDocuments = selectedPlatforms.includes("google")
+    ? filterLocalizedDocumentsByLocale(
+        await loadGoogleMetadataDocuments(metadataBaseDir, metadataFormat),
+        context.locale,
+      )
+    : [];
 
   for (const platform of selectedPlatforms) {
     if (platform === "apple") {
@@ -72,10 +85,7 @@ export async function runMetadataPushCommand(
         );
       }
 
-      const documents = filterLocalizedDocumentsByLocale(
-        await loadAppleMetadataDocuments(metadataBaseDir),
-        context.locale,
-      );
+      const documents = appleDocuments;
 
       results.push(
         ...documents.map((document) => ({
@@ -132,10 +142,7 @@ export async function runMetadataPushCommand(
       );
     }
 
-    const documents = filterLocalizedDocumentsByLocale(
-      await loadGoogleMetadataDocuments(metadataBaseDir),
-      context.locale,
-    );
+    const documents = googleDocuments;
     const updates = mapGoogleMetadataDocuments(documents);
 
     results.push(

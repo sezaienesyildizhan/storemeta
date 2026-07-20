@@ -1,13 +1,11 @@
-import { readdir } from "node:fs/promises";
-import { extname, join, resolve } from "node:path";
+import { resolve } from "node:path";
 
-import { StoremetaError } from "../../../cli/errors.js";
+import type { MetadataFormat } from "../../../config/types.js";
 import type { GoogleMetadataDocument } from "../../../formats/metadata-types.js";
 import {
-  loadMarkdownMetadataFile,
-  loadYamlMetadataFile,
-  loadYmlMetadataFile,
-} from "../../../formats/load-metadata.js";
+  listMetadataFilesForFormat,
+  loadMetadataFileForFormat,
+} from "../../../formats/metadata-files.js";
 import {
   validateGoogleMetadataDocument,
   validateGoogleMetadataLengthConstraints,
@@ -17,60 +15,22 @@ import type { GoogleStoreListingUpdate } from "./types.js";
 
 async function loadGoogleMetadataFile(
   filePath: string,
-): Promise<GoogleMetadataDocument | undefined> {
-  const extension = extname(filePath).toLowerCase();
-
-  if (extension === ".yml") {
-    return validateGoogleMetadataDocument(
-      (await loadYmlMetadataFile(filePath)).parsed,
-    );
-  }
-
-  if (extension === ".yaml") {
-    return validateGoogleMetadataDocument(
-      (await loadYamlMetadataFile(filePath)).parsed,
-    );
-  }
-
-  if (extension === ".md") {
-    return validateGoogleMetadataDocument(
-      (await loadMarkdownMetadataFile(filePath)).parsed,
-    );
-  }
-
-  return undefined;
+  format: MetadataFormat,
+): Promise<GoogleMetadataDocument> {
+  return validateGoogleMetadataDocument(
+    (await loadMetadataFileForFormat(filePath, "google", format)).parsed,
+  );
 }
 
 export async function loadGoogleMetadataDocuments(
   metadataBaseDir: string,
+  format: MetadataFormat = "yaml",
 ): Promise<GoogleMetadataDocument[]> {
   const googleMetadataDir = resolve(metadataBaseDir, "google");
-  let entries;
-
-  try {
-    entries = await readdir(googleMetadataDir, { withFileTypes: true });
-  } catch (cause) {
-    throw new StoremetaError(
-      "FILESYSTEM_ERROR",
-      `Failed to read local Google metadata directory at ${googleMetadataDir}`,
-      { cause },
-    );
-  }
-
   const documents: GoogleMetadataDocument[] = [];
 
-  for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
-    if (!entry.isFile()) {
-      continue;
-    }
-
-    const document = await loadGoogleMetadataFile(
-      join(googleMetadataDir, entry.name),
-    );
-
-    if (document === undefined) {
-      continue;
-    }
+  for (const filePath of await listMetadataFilesForFormat(googleMetadataDir, format)) {
+    const document = await loadGoogleMetadataFile(filePath, format);
 
     validateGoogleMetadataLengthConstraints(document);
     documents.push(document);

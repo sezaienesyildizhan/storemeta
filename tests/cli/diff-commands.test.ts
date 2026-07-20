@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -61,7 +61,10 @@ describe("runMetadataDiffCommand", () => {
       await writeFile(join(tempDir, "metadata", "apple", "de.yml"), "locale: de\n");
       await writeFile(join(tempDir, "metadata", "apple", "notes.txt"), "ignored\n");
       await writeFile(join(tempDir, "metadata", "google", "en_US.yaml"), "locale: en-US\n");
-      await writeFile(join(tempDir, "metadata", "google", "tr-TR.md"), "locale: tr-TR\n");
+      await writeFile(
+        join(tempDir, "metadata", "google", "tr-TR.yml"),
+        "locale: tr-TR\n",
+      );
 
       await expect(
         runMetadataDiffCommand({
@@ -112,6 +115,43 @@ describe("runMetadataDiffCommand", () => {
           },
         ],
       });
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("parses Markdown locales and rejects mixed metadata formats", async () => {
+    const { configPath, tempDir } = await createProject();
+    const config = await readFile(configPath, "utf8");
+
+    try {
+      await writeFile(configPath, config.replace("format: yaml", "format: markdown"));
+      await mkdir(join(tempDir, "metadata", "google"), { recursive: true });
+      await writeFile(
+        join(tempDir, "metadata", "google", "en-US.md"),
+        "---\nlocale: en-US\n---\n\n# Google Play Listing\n\n## Title\n\nExample\n",
+      );
+
+      await expect(
+        runMetadataDiffCommand({ config: configPath, platform: "google" }),
+      ).resolves.toMatchObject({
+        status: "partial",
+        results: [
+          {
+            target: "metadata.google",
+            message: "local: en-US; expected: en-US, tr-TR; missing: tr-TR",
+          },
+        ],
+      });
+
+      await writeFile(
+        join(tempDir, "metadata", "google", "tr-TR.yml"),
+        "locale: tr-TR\n",
+      );
+
+      await expect(
+        runMetadataDiffCommand({ config: configPath, platform: "google" }),
+      ).rejects.toThrow(/YAML metadata file found while metadata\.format is markdown/);
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }

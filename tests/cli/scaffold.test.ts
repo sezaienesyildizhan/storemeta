@@ -80,6 +80,52 @@ describe("runScaffoldCommand", () => {
     ).resolves.toBeUndefined();
   });
 
+  it("creates canonical Markdown metadata files when configured", async () => {
+    const projectPath = await createTempProject();
+    const configPath = join(projectPath, "storemeta.yml");
+
+    await writeFile(
+      configPath,
+      [
+        "version: 1",
+        "project:",
+        "  name: Scaffold Test",
+        "  defaultApp: demo",
+        "apps:",
+        "  demo:",
+        "    metadata:",
+        "      baseDir: metadata",
+        "      format: markdown",
+        "    screenshots:",
+        "      baseDir: screenshots",
+        "    apple:",
+        '      appId: "1234567890"',
+        "      credentials:",
+        "        issuerIdEnv: STORE_APPLE_ISSUER_ID",
+        "        keyIdEnv: STORE_APPLE_KEY_ID",
+        "        privateKeyPathEnv: STORE_APPLE_PRIVATE_KEY_PATH",
+        "      locales:",
+        "        default: [en-US]",
+        "    google:",
+        "      packageName: com.example.demo",
+        "      credentials:",
+        "        serviceAccountPathEnv: STORE_GOOGLE_SERVICE_ACCOUNT_PATH",
+        "      locales:",
+        "        default: [tr]",
+        "",
+      ].join("\n"),
+    );
+
+    await runScaffoldCommand({ config: configPath });
+
+    await expect(
+      readFile(join(projectPath, "metadata/apple/en-US.md"), "utf8"),
+    ).resolves.toContain("# App Store Listing\n\n## App Name");
+    await expect(
+      readFile(join(projectPath, "metadata/google/tr.md"), "utf8"),
+    ).resolves.toContain("# Google Play Listing\n\n## Title");
+  });
+
   it("does not overwrite existing metadata files", async () => {
     const projectPath = await createTempProject();
     const configPath = join(projectPath, "storemeta.yml");

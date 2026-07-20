@@ -111,6 +111,33 @@ describe("Google listing pull helpers", () => {
       await rm(metadataBaseDir, { recursive: true, force: true });
     }
   });
+
+  it("writes Google listing documents as Markdown with pull provenance", async () => {
+    const metadataBaseDir = await mkdtemp(join(tmpdir(), "storemeta-google-"));
+
+    try {
+      const filePath = await writeGoogleListingDocument(
+        metadataBaseDir,
+        {
+          locale: "en_us",
+          title: "English",
+          full_description: "Long description",
+        },
+        "markdown",
+        "2026-07-20T12:00:00.000Z",
+      );
+
+      expect(filePath).toBe(join(metadataBaseDir, "google", "en-US.md"));
+      await expect(readFile(filePath, "utf8")).resolves.toContain(
+        "platform: google\nsource: pulled\nfetched_at: 2026-07-20T12:00:00.000Z",
+      );
+      await expect(readFile(filePath, "utf8")).resolves.toContain(
+        "## Full Description\n\nLong description",
+      );
+    } finally {
+      await rm(metadataBaseDir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("mapGoogleMetadataDocument", () => {
@@ -201,12 +228,37 @@ describe("Google listing push helpers", () => {
     }
   });
 
+  it("loads and validates Google Markdown documents", async () => {
+    const metadataBaseDir = await mkdtemp(join(tmpdir(), "storemeta-google-"));
+    const googleDir = join(metadataBaseDir, "google");
+
+    try {
+      await mkdir(googleDir, { recursive: true });
+      await writeFile(
+        join(googleDir, "en-US.md"),
+        "---\nlocale: en-US\n---\n\n# Google Play Listing\n\n## Title\n\nEnglish\n\n## Short Description\n\nShort\n",
+      );
+
+      await expect(
+        loadGoogleMetadataDocuments(metadataBaseDir, "markdown"),
+      ).resolves.toEqual([
+        {
+          locale: "en-US",
+          title: "English",
+          short_description: "Short",
+        },
+      ]);
+    } finally {
+      await rm(metadataBaseDir, { recursive: true, force: true });
+    }
+  });
+
   it("fails when the Google metadata directory is missing", async () => {
     const metadataBaseDir = await mkdtemp(join(tmpdir(), "storemeta-google-"));
 
     try {
       await expect(loadGoogleMetadataDocuments(metadataBaseDir)).rejects.toThrow(
-        /Failed to read local Google metadata directory/,
+        /Failed to read metadata directory/,
       );
     } finally {
       await rm(metadataBaseDir, { recursive: true, force: true });
