@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -51,11 +51,27 @@ describe("metadata file loaders", () => {
     }
   });
 
-  it("loads .md files as yaml metadata", async () => {
+  it("loads .md files as Markdown metadata", async () => {
     const tempDir = await mkdtemp(join(tmpdir(), "storemeta-"));
-    const filePath = join(tempDir, "en-US.md");
+    const platformDir = join(tempDir, "google");
+    const filePath = join(platformDir, "en-US.md");
 
-    await writeFile(filePath, "locale: en-US\ntitle: Example\n");
+    await mkdir(platformDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        "locale: en-US",
+        "---",
+        "",
+        "# Google Play Listing",
+        "",
+        "## Title",
+        "",
+        "Example",
+        "",
+      ].join("\n"),
+    );
 
     try {
       await expect(loadMarkdownMetadataFile(filePath)).resolves.toMatchObject({

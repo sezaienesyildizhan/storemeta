@@ -3,7 +3,7 @@ import { z } from "zod";
 import { StoremetaError } from "../cli/errors.js";
 import type { StoremetaConfig } from "./types.js";
 
-const metadataFormatSchema = z.literal("yaml");
+const metadataFormatSchema = z.enum(["markdown", "yaml"]);
 
 const projectSettingsSchema = z
   .object({
@@ -15,7 +15,7 @@ const projectSettingsSchema = z
 const metadataSettingsSchema = z
   .object({
     baseDir: z.string().min(1),
-    format: metadataFormatSchema,
+    format: metadataFormatSchema.default("markdown"),
   })
   .strict();
 
