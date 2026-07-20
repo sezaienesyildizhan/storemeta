@@ -314,7 +314,7 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add Release Please versioning and changelog automation.
 - [x] Add npm trusted publishing workflow with provenance support.
 - [x] Add a manual recovery path for failed npm publishing.
-- [ ] Configure `storemeta` trusted publishing on npmjs.com.
+- [x] Configure `storemeta` trusted publishing on npmjs.com.
 
 ## 30. Markdown Metadata Format
 
