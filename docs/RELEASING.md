@@ -12,6 +12,8 @@ storemeta uses GitHub Actions, Release Please, and npm trusted publishing.
 
 Normal commits do not publish packages directly. This prevents duplicate npm versions and keeps release timing explicit.
 
+CI and release workflows skip changes where every modified file is Markdown or `LICENSE`. This includes `README.md` and files under `docs/`. If a commit also changes source, configuration, examples, package files, or workflow files, the workflows run normally.
+
 ## One-time npm setup
 
 Configure trusted publishing for the existing `storemeta` package on npm:
