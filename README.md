@@ -130,13 +130,17 @@ Run `storemeta --help` or any command with `--help` for options.
 
 ## Example Project
 
-A safe, fake sample project lives under [`examples/`](examples).
+A safe, fake sample project lives under [`examples/`](examples). Proposed Markdown metadata examples are in [`examples/metadata-md`](examples/metadata-md).
 
 ## Documentation
 
 The current user and config documentation is here:
 
 - [DOCUMENTATION.md](docs/DOCUMENTATION.md)
+
+Planned Markdown metadata format:
+
+- [MARKDOWN_METADATA.md](docs/MARKDOWN_METADATA.md)
 
 The original implementation plan is kept here:
 

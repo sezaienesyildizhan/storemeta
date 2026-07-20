@@ -306,3 +306,21 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Publish the initial npm package.
 - [x] Tag the release.
 - [x] Confirm the public repository contains no ignored or secret material.
+
+## 30. Markdown Metadata Format
+
+- [x] Add mock Markdown metadata examples under `examples/metadata-md`.
+- [x] Document Markdown as the intended default metadata authoring format.
+- [x] Document YAML as the alternative metadata format.
+- [x] Document that mixed metadata mode is not supported.
+- [ ] Update config schema to support `metadata.format: markdown`.
+- [ ] Make `storemeta init` default to Markdown metadata.
+- [ ] Make `storemeta scaffold` create `.md` metadata files when format is Markdown.
+- [ ] Add Markdown frontmatter and heading parser.
+- [ ] Add Apple Markdown heading-to-field mapping.
+- [ ] Add Google Markdown heading-to-field mapping.
+- [ ] Make metadata pull write Markdown when format is Markdown.
+- [ ] Make metadata push read Markdown when format is Markdown.
+- [ ] Make metadata diff support Markdown format.
+- [ ] Make validate check Markdown frontmatter, headings, duplicate sections, and length limits.
+- [ ] Add tests for Markdown parsing, validation, pull, push, diff, and scaffold behavior.

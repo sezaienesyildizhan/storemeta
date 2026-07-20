@@ -64,7 +64,7 @@ Create missing local files and folders from config:
 storemeta scaffold
 ```
 
-`scaffold` creates minimal metadata files such as `locale: en-US` and screenshot directories for configured locales. It does not overwrite existing metadata files.
+`scaffold` creates minimal metadata files and screenshot directories for configured locales. It does not overwrite existing metadata files.
 
 Pull metadata:
 
@@ -161,6 +161,22 @@ Do not commit private keys, service account JSON files, or real `.env` files.
 
 ## Metadata Layout
 
+Current releases support YAML metadata. Markdown is the planned default metadata authoring format for the next metadata-format update. YAML will remain available as an alternative structured format.
+
+The planned default Markdown layout is:
+
+```text
+metadata/
+  apple/
+    en-US.md
+    tr.md
+  google/
+    en-US.md
+    tr.md
+```
+
+The YAML alternative layout is:
+
 ```text
 metadata/
   apple/
@@ -171,13 +187,101 @@ metadata/
     tr.yml
 ```
 
-Supported metadata file extensions:
+The planned Markdown config is:
 
-- `.yml`
-- `.yaml`
-- `.md` files whose contents are YAML
+```yaml
+metadata:
+  baseDir: metadata
+  format: markdown
+```
 
-Apple metadata fields:
+The current YAML config is:
+
+```yaml
+metadata:
+  baseDir: metadata
+  format: yaml
+```
+
+Mixed mode is not supported in the planned Markdown format. A configured app should use either Markdown metadata files or YAML metadata files.
+
+Planned Markdown format specification:
+
+- [MARKDOWN_METADATA.md](MARKDOWN_METADATA.md)
+
+Markdown Apple metadata example:
+
+```md
+---
+locale: en-US
+---
+
+# App Store Listing
+
+## App Name
+
+Example App
+
+## Subtitle
+
+Short subtitle
+
+## Promotional Text
+
+Optional promo text.
+
+## Description
+
+Long description text.
+
+## Keywords
+
+one,two,three
+
+## What's New
+
+What changed in this version.
+
+## Support URL
+
+https://example.com/support
+
+## Marketing URL
+
+https://example.com
+
+## Privacy Policy URL
+
+https://example.com/privacy
+```
+
+Markdown Google metadata example:
+
+```md
+---
+locale: en-US
+---
+
+# Google Play Listing
+
+## Title
+
+Example App
+
+## Short Description
+
+Short description
+
+## Full Description
+
+Long description text.
+
+## Video
+
+https://example.com/video
+```
+
+YAML Apple metadata example:
 
 ```yaml
 locale: en-US
@@ -192,7 +296,7 @@ marketing_url: https://example.com
 privacy_policy_url: https://example.com/privacy
 ```
 
-Google metadata fields:
+YAML Google metadata example:
 
 ```yaml
 locale: en-US
