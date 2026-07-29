@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.3](https://github.com/sezaienesyildizhan/storemeta/compare/v0.2.2...v0.2.3) (2026-07-29)
+
+
+### Bug Fixes
+
+* **release:** publish updated npm keywords ([efeecbf](https://github.com/sezaienesyildizhan/storemeta/commit/efeecbf9e3b8c3a2508b8826540dd56589696b81))
+* **release:** publish updated npm keywords ([dd60448](https://github.com/sezaienesyildizhan/storemeta/commit/dd6044860826563405f87833ecd1ad246c5dd717))
+
 ## [0.2.2](https://github.com/sezaienesyildizhan/storemeta/compare/v0.2.1...v0.2.2) (2026-07-29)
 
 
