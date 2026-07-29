@@ -1,0 +1,5 @@
+/.github/CODEOWNERS @sezaienesyildizhan
+/.github/workflows/ @sezaienesyildizhan
+/package.json @sezaienesyildizhan
+/package-lock.json @sezaienesyildizhan
+/scripts/ @sezaienesyildizhan

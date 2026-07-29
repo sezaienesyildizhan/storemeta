@@ -41,16 +41,14 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-  publish-npm:
+  package-release:
     needs: release-please
     if: >-
       always() &&
       (needs.release-please.outputs.release-created == 'true' || inputs.version != '')
     runs-on: ubuntu-latest
-    environment: npm
     permissions:
       contents: read
-      id-token: write
 
     steps:
       - name: Resolve release ref
@@ -78,7 +76,6 @@ jobs:
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
       - name: Install dependencies
@@ -91,5 +88,65 @@ jobs:
           npm run build
           npm pack --dry-run
 
-      - name: Publish to npm
-        run: npm publish --access public
+      - name: Pack release
+        run: |
+          mkdir -p "$RUNNER_TEMP/release-artifact"
+          npm pack --pack-destination "$RUNNER_TEMP/release-artifact"
+
+      - name: Upload release package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: npm-release-package
+          path: ${{ runner.temp }}/release-artifact/*.tgz
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-npm:
+    needs: package-release
+    if: needs.package-release.result == 'success'
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Download release package
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: npm-release-package
+          path: ${{ runner.temp }}/release-artifact
+
+      - name: Resolve release package
+        id: package
+        run: |
+          shopt -s nullglob
+          packages=("$RUNNER_TEMP"/release-artifact/*.tgz)
+          if [ "${#packages[@]}" -ne 1 ]; then
+            echo "Expected exactly one release tarball, found ${#packages[@]}" >&2
+            exit 1
+          fi
+          echo "path=${packages[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to npm as maintainer
+        env:
+          EXPECTED_NPM_USER: sezaienesyildizhan
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RELEASE_TARBALL: ${{ steps.package.outputs.path }}
+        run: |
+          publisher="$(npm whoami)"
+          if [ "$publisher" != "$EXPECTED_NPM_USER" ]; then
+            echo "Unexpected npm publisher: $publisher" >&2
+            exit 1
+          fi
+          npm publish "$RELEASE_TARBALL" \
+            --access public \
+            --provenance \
+            --ignore-scripts
