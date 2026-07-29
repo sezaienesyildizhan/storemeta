@@ -242,7 +242,7 @@ final
 
 ## Release Notes
 
-Releases are managed by Release Please and npm trusted publishing. Do not run `npm publish` locally during the normal release flow. See `docs/RELEASING.md` for the complete process.
+Releases are managed by Release Please and a provenance-enabled npm publish job. The package-scoped `NPM_TOKEN` exists only in the protected `npm` GitHub Environment and must never be read, printed, copied into repository files, or exposed to non-publish steps. Do not run `npm publish` locally during the normal release flow. See `docs/RELEASING.md` for the complete process.
 
 Before merging a Release Please pull request:
 
@@ -253,6 +253,7 @@ Before merging a Release Please pull request:
 5. Confirm examples and docs contain no real secrets or production app data.
 6. Confirm package metadata in `package.json` is accurate.
 7. Confirm the generated version and changelog match the intended semantic version change.
+8. Confirm the `npm` Environment deployment is expected before approving token access.
 
 ## Agent Checklist
 
