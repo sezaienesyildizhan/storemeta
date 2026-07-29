@@ -1,6 +1,6 @@
 {
   "name": "storemeta",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Manage, pull, validate, and publish App Store Connect and Google Play metadata and screenshots from the command line.",
   "license": "MIT",
   "type": "module",
