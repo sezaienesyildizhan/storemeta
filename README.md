@@ -2,7 +2,7 @@
 
 # storemeta
 
-### App Store Connect and Google Play metadata, managed as code.
+### Manage App Store Connect and Google Play metadata and screenshots from the command line.
 
 Pull, validate, review, and publish localized store listings and screenshots from one version-controlled project.
 
@@ -24,7 +24,7 @@ Pull, validate, review, and publish localized store listings and screenshots fro
 
 ---
 
-`storemeta` is an open source TypeScript CLI that keeps App Store Connect and Google Play listing content in Git. It replaces repetitive console editing with a local workflow that can be reviewed, validated, diffed, and repeated for every release.
+`storemeta` is an open source TypeScript CLI for managing App Store Connect and Google Play metadata and screenshots. Pull remote store content into local files, validate and review changes, then publish updates without repeating the same work in two web consoles.
 
 Metadata can be authored in human-friendly **Markdown** or structured **YAML**. Screenshots use predictable platform and locale directories. Remote writes support dry runs so the exact target set can be checked before publishing.
 
@@ -32,7 +32,7 @@ Metadata can be authored in human-friendly **Markdown** or structured **YAML**. 
 
 | | Capability | What it gives you |
 | --- | --- | --- |
-| 📝 | Metadata as code | Review titles, descriptions, keywords, and release notes in pull requests. |
+| 📝 | Metadata workflows | Pull, edit, validate, and publish titles, descriptions, keywords, and release notes. |
 | 🌍 | Locale-aware workflow | Keep Apple and Google locale files organized in one project. |
 | 📱 | Screenshot automation | Pull and push screenshots through deterministic platform-specific folders. |
 | ✅ | Local validation | Catch malformed config, metadata, locale, credential, and screenshot layouts early. |
