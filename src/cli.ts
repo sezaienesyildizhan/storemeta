@@ -31,7 +31,7 @@ export function buildCliProgram(): Command {
   const program = new Command()
     .name("storemeta")
     .description(
-      "CLI for pulling, validating, and pushing App Store Connect and Google Play metadata and screenshots.",
+      "Manage, pull, validate, and publish App Store Connect and Google Play metadata and screenshots from the command line.",
     )
     .option("--config <path>", "Path to the root storemeta config file")
     .option("--app <id>", "Configured app identifier")
