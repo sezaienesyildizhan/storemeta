@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1](https://github.com/sezaienesyildizhan/storemeta/compare/v0.2.0...v0.2.1) (2026-07-29)
+
+
+### Bug Fixes
+
+* **package:** correct product description ([50dd1d5](https://github.com/sezaienesyildizhan/storemeta/commit/50dd1d5c02e135d51c102a8bb9acd583ff15a730))
+* **package:** correct product description ([1e6553a](https://github.com/sezaienesyildizhan/storemeta/commit/1e6553ad2c3423e0d6af512a2268c60f83837696))
+
 ## [0.2.0](https://github.com/sezaienesyildizhan/storemeta/compare/v0.1.0...v0.2.0) (2026-07-20)
 
 
