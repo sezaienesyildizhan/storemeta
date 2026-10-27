@@ -315,7 +315,9 @@ This file is the implementation checklist for `storemeta`, ordered to minimize r
 - [x] Add provenance-enabled npm publishing automation.
 - [x] Add a manual recovery path for failed npm publishing.
 - [x] Protect npm publishing with a package-scoped token and GitHub Environment approval.
-- [ ] Rotate the package-scoped `NPM_TOKEN` before 2026-10-27.
+- [x] Rotate the package-scoped `NPM_TOKEN` before 2026-10-27.
+- [ ] Rotate the package-scoped `NPM_TOKEN` before 2027-01-25.
+- [ ] Replace bypass-2FA token publishing before npm removes it in January 2027.
 
 ## 30. Markdown Metadata Format
 

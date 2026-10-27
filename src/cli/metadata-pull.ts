@@ -1,6 +1,7 @@
 import { dirname, resolve } from "node:path";
 
 import type { GlobalOptions } from "../cli.js";
+import type { CommandItemResult, CommandSummary } from "./result-types.js";
 import { StoremetaError } from "./errors.js";
 import { resolveSelectedPlatforms } from "../config/select-platforms.js";
 import { normalizeLocaleCode } from "../locales/normalize.js";
@@ -36,9 +37,19 @@ function filterLocalizedDocumentsByLocale<T extends { locale: string }>(
   );
 }
 
+function createSuccessSummary(results: CommandItemResult[]): CommandSummary {
+  return {
+    status: "success",
+    successCount: results.length,
+    failureCount: 0,
+    skippedCount: 0,
+    results,
+  };
+}
+
 export async function runMetadataPullCommand(
   options: Pick<GlobalOptions, "config" | "app" | "locale" | "platform">,
-): Promise<void> {
+): Promise<CommandSummary> {
   const context = await createCommandContext(options);
   const app = context.app;
   const selectedPlatforms = resolveSelectedPlatforms(app, context.platform);
@@ -48,6 +59,7 @@ export async function runMetadataPullCommand(
   );
   const metadataFormat = app.settings.metadata.format;
   const fetchedAt = new Date().toISOString();
+  const results: CommandItemResult[] = [];
 
   for (const platform of selectedPlatforms) {
     if (platform === "apple") {
@@ -82,6 +94,13 @@ export async function runMetadataPullCommand(
         documents,
         metadataFormat,
         fetchedAt,
+      );
+      results.push(
+        ...documents.map((document) => ({
+          target: `apple/${normalizeLocaleCode(document.locale)}`,
+          success: true,
+          message: "Pulled Apple metadata",
+        })),
       );
       continue;
     }
@@ -118,10 +137,19 @@ export async function runMetadataPullCommand(
           metadataFormat,
           fetchedAt,
         );
+        results.push(
+          ...documents.map((document) => ({
+            target: `google/${document.locale}`,
+            success: true,
+            message: "Pulled Google metadata",
+          })),
+        );
       },
       {
         autoCommit: false,
       },
     );
   }
+
+  return createSuccessSummary(results);
 }

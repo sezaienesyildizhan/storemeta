@@ -370,6 +370,8 @@ Metadata pull writes one local file per platform and locale.
 
 For Markdown, pulled files include `platform`, `source: pulled`, and a shared command timestamp in `fetched_at` frontmatter. Pull rewrites the target locale file in stable canonical heading order.
 
+Metadata pull prints a command summary with one result per pulled platform locale, such as `apple/en-US` or `google/tr-TR`. A pull whose `--locale` filter matches no remote localization reports zero results and writes no files.
+
 Screenshot pull writes downloaded screenshots into the canonical local screenshot layout. Google screenshot pull uses configured default locales unless `--locale` is supplied. Apple screenshot pull discovers version localizations from App Store Connect and can be filtered with `--locale`.
 
 ## Push Behavior

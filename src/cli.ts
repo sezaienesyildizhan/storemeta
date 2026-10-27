@@ -114,12 +114,14 @@ export function buildCliProgram(): Command {
     .description("Pull remote metadata into the local project")
     .action(async () => {
       const options = program.opts<GlobalOptions>();
-      await runMetadataPullCommand({
+      const summary = await runMetadataPullCommand({
         config: options.config,
         app: options.app,
         locale: options.locale,
         platform: options.platform,
       });
+      console.log(renderCommandSummary(summary));
+      applyCommandSummaryExitCode(summary);
     });
 
   metadataCommand
