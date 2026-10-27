@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.4](https://github.com/sezaienesyildizhan/storemeta/compare/v0.2.3...v0.2.4) (2026-10-27)
+
+
+### Bug Fixes
+
+* **cli:** print command summary for metadata pull ([fccd8fb](https://github.com/sezaienesyildizhan/storemeta/commit/fccd8fb23a354f52f6a0e494e15daaa37bd59c0a))
+* **cli:** print command summary for metadata pull ([598b13a](https://github.com/sezaienesyildizhan/storemeta/commit/598b13af0f27b376c9ea326b98748dee19d1f145))
+* **deps:** require zod 4.6.7 for GHSA-mrhx-c7xc-m3w5 ([c9ee3a2](https://github.com/sezaienesyildizhan/storemeta/commit/c9ee3a2b0cad8161b5b0306d22613a0bda3c4cfd))
+* **deps:** require zod 4.6.7 for GHSA-mrhx-c7xc-m3w5 ([28bda02](https://github.com/sezaienesyildizhan/storemeta/commit/28bda02f460aa5b1c4fb84368c3187b1f1a8d21b))
+
 ## [0.2.3](https://github.com/sezaienesyildizhan/storemeta/compare/v0.2.2...v0.2.3) (2026-07-29)
 
 
