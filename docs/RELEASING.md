@@ -41,7 +41,9 @@ The npm package must allow publishing with a granular token that has bypass 2FA 
 
 Rotate `NPM_TOKEN` before its expiration:
 
-The currently configured token expires on **2026-10-27**.
+The currently configured token expires on **2027-01-25**.
+
+npm is deprecating direct publishing with bypass-2FA granular tokens and plans to remove it in January 2027. That may happen before the current token expires. If publishing starts failing with a valid token, move the publish job to a supported method, such as npm Trusted Publishing or a stage-only token, instead of rotating the same token type.
 
 1. Create a replacement granular token with the same package-only permissions.
 2. Run `gh secret set NPM_TOKEN --env npm` and enter the replacement token directly into the prompt.
